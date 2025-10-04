@@ -1,49 +1,39 @@
 const { query } = require('../config/database');
 
-class Reporte {
-  // Crear nuevo reporte
-  async crear(reporteData) {
+class Noticia {
+  // Crear nueva noticia
+  async crear(noticiaData) {
     const {
-      id, usuario_id, titulo, descripcion, categoria, 
-      longitud, latitud, fotos, dispositivo_origen
-    } = reporteData;
+      titulo, contenido, adjuntos, urls_externas, prioritaria, usuario_id
+    } = noticiaData;
 
     const sql = `
-      INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, ubicacion, fotos, dispositivo_origen)
-      VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9)
+      INSERT INTO noticia (titulo, contenido, adjuntos, urls_externas, prioritaria, usuario_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
 
     const result = await query(sql, [
-      id, usuario_id, titulo, descripcion, categoria, 
-      longitud, latitud, fotos || [], dispositivo_origen
+      titulo, contenido, 
+      adjuntos || [], 
+      urls_externas || [], 
+      prioritaria || false, 
+      usuario_id
     ]);
 
     return result.rows[0];
   }
 
-  // Obtener todos los reportes con paginación
-  async obtenerTodos(pagina = 1, limite = 10, filtros = {}) {
+  // Obtener todas las noticias con paginación
+  async obtenerTodas(pagina = 1, limite = 10, filtros = {}) {
     let whereConditions = [];
     let valores = [];
     let contador = 1;
 
     // Construir filtros dinámicos
-    if (filtros.categoria) {
-      whereConditions.push(`categoria = $${contador}`);
-      valores.push(filtros.categoria);
-      contador++;
-    }
-
-    if (filtros.estado) {
-      whereConditions.push(`estado = $${contador}`);
-      valores.push(filtros.estado);
-      contador++;
-    }
-
-    if (filtros.usuario_id) {
-      whereConditions.push(`usuario_id = $${contador}`);
-      valores.push(filtros.usuario_id);
+    if (filtros.prioritaria !== undefined) {
+      whereConditions.push(`prioritaria = $${contador}`);
+      valores.push(filtros.prioritaria);
       contador++;
     }
 
@@ -51,11 +41,11 @@ class Reporte {
 
     // Consulta principal con paginación
     const sql = `
-      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
-      FROM reporte r
-      LEFT JOIN usuario u ON r.usuario_id = u.id
+      SELECT n.*, u.nombre as usuario_nombre, u.email as usuario_email
+      FROM noticia n
+      LEFT JOIN usuario u ON n.usuario_id = u.id
       ${whereClause}
-      ORDER BY r.creado_en DESC
+      ORDER BY n.publicado_en DESC
       LIMIT $${contador} OFFSET $${contador + 1}
     `;
 
@@ -66,28 +56,28 @@ class Reporte {
     return result.rows;
   }
 
-  // Obtener reporte por ID
+  // Obtener noticia por ID
   async obtenerPorId(id) {
     const sql = `
-      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
-      FROM reporte r
-      LEFT JOIN usuario u ON r.usuario_id = u.id
-      WHERE r.id = $1
+      SELECT n.*, u.nombre as usuario_nombre, u.email as usuario_email
+      FROM noticia n
+      LEFT JOIN usuario u ON n.usuario_id = u.id
+      WHERE n.id = $1
     `;
 
     const result = await query(sql, [id]);
     return result.rows[0];
   }
 
-  // Actualizar reporte
+  // Actualizar noticia
   async actualizar(id, datosActualizados) {
-    const camposPermitidos = ['titulo', 'descripcion', 'categoria', 'estado'];
+    const camposPermitidos = ['titulo', 'contenido', 'adjuntos', 'urls_externas', 'prioritaria'];
     const campos = [];
     const valores = [];
     let contador = 1;
 
     Object.keys(datosActualizados).forEach(key => {
-      if (camposPermitidos.includes(key)) {
+      if (camposPermitidos.includes(key) && datosActualizados[key] !== undefined) {
         campos.push(`${key} = $${contador}`);
         valores.push(datosActualizados[key]);
         contador++;
@@ -99,34 +89,18 @@ class Reporte {
     }
 
     valores.push(id);
-    const sql = `UPDATE reporte SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
+    const sql = `UPDATE noticia SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
 
     const result = await query(sql, valores);
     return result.rows[0];
   }
 
-  // Eliminar reporte
+  // Eliminar noticia
   async eliminar(id) {
-    const sql = 'DELETE FROM reporte WHERE id = $1 RETURNING *';
+    const sql = 'DELETE FROM noticia WHERE id = $1 RETURNING *';
     const result = await query(sql, [id]);
     return result.rows[0];
   }
-
-  // Estadísticas de reportes
-  async obtenerEstadisticas() {
-    const sql = `
-      SELECT 
-        categoria,
-        estado,
-        COUNT(*) as cantidad
-      FROM reporte
-      GROUP BY categoria, estado
-      ORDER BY categoria, estado
-    `;
-
-    const result = await query(sql);
-    return result.rows;
-  }
 }
 
-module.exports = new Reporte();
+module.exports = new Noticia();

@@ -39,11 +39,12 @@ app.get('/api/salud', (req, res) => {
   });
 });
 
-// Manejo de rutas no encontradas
-app.use('*', (req, res) => {
+// Manejo de rutas no encontradas - CORREGIDO
+app.use((req, res) => {
   res.status(404).json({
     error: 'Ruta no encontrada',
-    path: req.originalUrl
+    path: req.originalUrl,
+    method: req.method
   });
 });
 

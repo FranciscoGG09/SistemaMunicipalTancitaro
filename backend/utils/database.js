@@ -1,5 +1,6 @@
 const { query } = require('../config/database');
 require('dotenv').config();
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD, typeof process.env.DB_PASSWORD);
 
 // Script SQL para crear las tablas
 const createTables = `
