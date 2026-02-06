@@ -57,6 +57,52 @@ const registrar = async (req, res) => {
   }
 };
 
+// Registrar ciudadano (Público - App Móvil)
+const registrarPublico = async (req, res) => {
+  try {
+    const { nombre, email, password } = req.body;
+
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    }
+
+    const usuarioExistente = await Usuario.buscarPorEmail(email);
+    if (usuarioExistente) {
+      return res.status(400).json({ error: 'El email ya está registrado' });
+    }
+
+    // Forzar rol ciudadano
+    const nuevoUsuario = await Usuario.crear({
+      nombre,
+      email,
+      password,
+      rol: 'ciudadano',
+      departamento: null
+    });
+
+    const token = jwt.sign(
+      { id: nuevoUsuario.id, rol: nuevoUsuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    res.status(201).json({
+      mensaje: 'Registro exitoso',
+      token,
+      usuario: {
+        id: nuevoUsuario.id,
+        nombre: nuevoUsuario.nombre,
+        email: nuevoUsuario.email,
+        rol: nuevoUsuario.rol
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en registro público:', error);
+    res.status(500).json({ error: 'Error interno al registrar' });
+  }
+};
+
 // Login de usuario
 const login = async (req, res) => {
   try {
@@ -128,6 +174,7 @@ const obtenerPerfil = async (req, res) => {
 
 module.exports = {
   registrar,
+  registrarPublico,
   login,
   obtenerPerfil
 };

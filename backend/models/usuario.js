@@ -5,19 +5,37 @@ class Usuario {
   // Crear nuevo usuario
   async crear(usuarioData) {
     const { nombre, email, password, rol, departamento } = usuarioData;
-    
+
+    // Validar roles permitidos
+    const rolesPermitidos = ['admin', 'comunicacion_social', 'trabajador', 'ciudadano'];
+    if (!rolesPermitidos.includes(rol)) {
+      throw new Error('Rol no válido');
+    }
+
     // Hash de la contraseña
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
-    
+
     const sql = `
       INSERT INTO usuario (nombre, email, password_hash, rol, departamento) 
       VALUES ($1, $2, $3, $4, $5) 
       RETURNING id, nombre, email, rol, departamento, creado_en
     `;
-    
+
     const result = await query(sql, [nombre, email, passwordHash, rol, departamento]);
     return result.rows[0];
+  }
+
+  // Registrar ciudadano (Público)
+  async registrarCiudadano(usuarioData) {
+    const { nombre, email, password } = usuarioData;
+    return this.crear({
+      nombre,
+      email,
+      password,
+      rol: 'ciudadano',
+      departamento: null
+    });
   }
 
   // Buscar usuario por email
@@ -61,7 +79,7 @@ class Usuario {
 
     valores.push(id);
     const sql = `UPDATE usuario SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
-    
+
     const result = await query(sql, valores);
     return result.rows[0];
   }

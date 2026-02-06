@@ -15,13 +15,15 @@ const router = express.Router();
 router.use(verificarToken);
 
 // Rutas públicas para reportes (ciudadanos pueden crear y ver sus reportes)
-router.post('/', crearReporte);
+const { upload } = require('../middleware/uploadMiddleware');
+
+router.post('/', upload.array('fotos', 5), crearReporte);
 router.get('/', obtenerReportes);
 router.get('/:id', obtenerReportePorId);
 
 // Rutas protegidas (solo trabajadores y admin)
 router.put('/:id', verificarTrabajador, actualizarReporte);
 router.delete('/:id', verificarTrabajador, eliminarReporte);
-router.get('/estadisticas/estadisticas', verificarTrabajador, obtenerEstadisticas);
+router.get('/estadisticas/estadisticas', obtenerEstadisticas);
 
 module.exports = router;

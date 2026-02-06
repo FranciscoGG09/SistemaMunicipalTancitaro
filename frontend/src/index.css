@@ -1,10 +1,24 @@
+:root {
+  /* Colors - Blue and White Theme */
+  --primary-blue: #0047BA;
+  --secondary-blue: #002F87;
+  --light-blue: #F0F4FF;
+  --accent-blue: #0063EB;
+  --white: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --bg-main: #F4F7FE;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
 }
 
 code {

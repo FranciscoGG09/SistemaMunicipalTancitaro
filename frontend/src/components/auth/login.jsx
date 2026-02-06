@@ -25,62 +25,47 @@ const Login = () => {
     setError('');
 
     const result = await login(email, password);
-    
+
     if (!result.success) {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
   return (
-    <Container 
-      component="main" 
-      maxWidth="sm"
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      }}
-    >
-      <Paper 
+    <Container component="main" maxWidth="xs" className="auth-container">
+      <Paper
         elevation={8}
-        sx={{
-          padding: 4,
-          width: '100%',
-          borderRadius: 2,
-          background: 'rgba(255, 255, 255, 0.95)'
-        }}
+        className="auth-paper"
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Typography 
-            component="h1" 
-            variant="h4" 
-            gutterBottom
-            sx={{ 
+          <img src="/logo512.png" alt="Logo Municipio" style={{ width: '150px', marginBottom: '1rem' }} />
+          <Typography
+            component="h1"
+            variant="h5"
+            sx={{
               fontWeight: 'bold',
-              color: '#2c5aa0'
+              color: 'var(--primary-blue)'
             }}
           >
-            🏛️ Sistema Municipal Tancítaro
+            Sistema Municipal Tancítaro
           </Typography>
-          <Typography 
-            component="h2" 
-            variant="h6" 
+          <Typography
+            component="h2"
+            variant="subtitle1"
             color="textSecondary"
           >
             Iniciar Sesión
           </Typography>
         </Box>
-        
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        
+
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
             margin="normal"
@@ -119,15 +104,18 @@ const Login = () => {
             fullWidth
             variant="contained"
             size="large"
-            sx={{ 
-              mt: 3, 
+            sx={{
+              mt: 3,
               mb: 2,
               py: 1.5,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              backgroundColor: 'var(--primary-blue)',
+              '&:hover': {
+                backgroundColor: 'var(--secondary-blue)'
+              }
             }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Iniciar Sesión'}
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Iniciar Sesión'}
           </Button>
         </Box>
 

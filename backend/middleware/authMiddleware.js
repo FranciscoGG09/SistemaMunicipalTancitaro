@@ -5,7 +5,7 @@ const Usuario = require('../models/usuario');
 const verificarToken = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         error: 'Acceso denegado. Token no proporcionado'
@@ -13,13 +13,13 @@ const verificarToken = async (req, res, next) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    
+
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Buscar usuario en base de datos
     const usuario = await Usuario.buscarPorId(decoded.id);
-    
+
     if (!usuario) {
       return res.status(401).json({
         error: 'Token inválido. Usuario no existe'
@@ -29,7 +29,7 @@ const verificarToken = async (req, res, next) => {
     // Agregar usuario al request
     req.usuario = usuario;
     next();
-    
+
   } catch (error) {
     return res.status(401).json({
       error: 'Token inválido o expirado'
@@ -57,8 +57,19 @@ const verificarTrabajador = (req, res, next) => {
   next();
 };
 
+// Verificar permisos para noticias (Admin o Comunicación Social)
+const verificarPermisoNoticia = (req, res, next) => {
+  if (!['admin', 'comunicacion_social'].includes(req.usuario.rol)) {
+    return res.status(403).json({
+      error: 'Acceso denegado. Se requiere rol de administrador o comunicación social'
+    });
+  }
+  next();
+};
+
 module.exports = {
   verificarToken,
   verificarAdmin,
-  verificarTrabajador
+  verificarTrabajador,
+  verificarPermisoNoticia
 };

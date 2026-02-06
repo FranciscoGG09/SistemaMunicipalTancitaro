@@ -10,7 +10,7 @@ import {
   Toolbar,
   Divider,
   Box,
-  Typography 
+  Typography
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -28,39 +28,45 @@ const Sidebar = () => {
   const { user } = useAuth();
 
   const menuItems = [
-    { 
-      text: 'Dashboard', 
-      icon: <DashboardIcon />, 
-      path: '/', 
-      roles: ['admin', 'trabajador', 'ciudadano'] 
+    {
+      text: 'Dashboard',
+      icon: <DashboardIcon />,
+      path: '/',
+      roles: ['admin', 'trabajador', 'ciudadano']
     },
-    { 
-      text: 'Reportes', 
-      icon: <ReportIcon />, 
-      path: '/reportes', 
-      roles: ['admin', 'trabajador', 'ciudadano'] 
+    {
+      text: 'Reportes',
+      icon: <ReportIcon />,
+      path: '/reportes',
+      roles: ['admin', 'trabajador', 'ciudadano']
     },
-    { 
-      text: 'Noticias', 
-      icon: <NewsIcon />, 
-      path: '/noticias', 
-      roles: ['admin'] 
+    {
+      text: 'Noticias',
+      icon: <NewsIcon />,
+      path: '/noticias',
+      roles: ['admin', 'comunicacion_social']
     },
-    { 
-      text: 'Correos', 
-      icon: <EmailIcon />, 
-      path: '/correos', 
-      roles: ['admin', 'trabajador'] 
+    {
+      text: 'Usuarios',
+      icon: <PeopleIcon />,
+      path: '/usuarios',
+      roles: ['admin']
     },
-    { 
-      text: 'Mi Perfil', 
-      icon: <ProfileIcon />, 
-      path: '/perfil', 
-      roles: ['admin', 'trabajador', 'ciudadano'] 
+    {
+      text: 'Correos',
+      icon: <EmailIcon />,
+      path: '/correos',
+      roles: ['admin', 'trabajador']
+    },
+    {
+      text: 'Mi Perfil',
+      icon: <ProfileIcon />,
+      path: '/perfil',
+      roles: ['admin', 'trabajador', 'ciudadano']
     },
   ];
 
-  const filteredMenuItems = menuItems.filter(item => 
+  const filteredMenuItems = menuItems.filter(item =>
     item.roles.includes(user?.rol)
   );
 
@@ -70,8 +76,8 @@ const Sidebar = () => {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { 
-          width: drawerWidth, 
+        [`& .MuiDrawer-paper`]: {
+          width: drawerWidth,
           boxSizing: 'border-box',
           background: '#f8fafc'
         },
@@ -108,8 +114,8 @@ const Sidebar = () => {
               >
                 {item.icon}
               </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
+              <ListItemText
+                primary={item.text}
                 primaryTypographyProps={{
                   fontWeight: location.pathname === item.path ? 'bold' : 'normal'
                 }}
@@ -118,7 +124,7 @@ const Sidebar = () => {
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
-        
+
         {/* Información del usuario */}
         <Box sx={{ p: 2, backgroundColor: '#e2e8f0', borderRadius: 2 }}>
           <Typography variant="caption" display="block" color="textSecondary">

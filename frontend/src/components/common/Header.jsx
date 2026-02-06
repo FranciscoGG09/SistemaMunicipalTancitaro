@@ -23,16 +23,17 @@ const Header = () => {
   };
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        background: 'linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%)'
+    <AppBar
+      position="fixed"
+      className="app-header"
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1
       }}
     >
       <Toolbar>
+        <img src="/logo192.png" alt="Logo" style={{ height: '40px', marginRight: '1rem' }} />
         <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-          🏛️ Sistema Municipal Tancítaro
+          Sistema Municipal Tancítaro
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -40,14 +41,14 @@ const Header = () => {
             <Typography variant="body2">
               {user?.nombre}
             </Typography>
-            <Chip 
-              label={user?.rol} 
+            <Chip
+              label={user?.rol}
               color={getRoleColor(user?.rol)}
               size="small"
             />
           </Box>
-          <Button 
-            color="inherit" 
+          <Button
+            color="inherit"
             onClick={logout}
             startIcon={<Logout />}
             sx={{ border: '1px solid rgba(255,255,255,0.3)' }}

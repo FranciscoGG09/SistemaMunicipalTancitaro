@@ -4,19 +4,27 @@ class Reporte {
   // Crear nuevo reporte
   async crear(reporteData) {
     const {
-      id, usuario_id, titulo, descripcion, categoria, 
+      id, usuario_id, titulo, descripcion, categoria,
       longitud, latitud, fotos, dispositivo_origen
     } = reporteData;
 
     const sql = `
-      INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, ubicacion, fotos, dispositivo_origen)
-      VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9)
+      INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, ubicacion, fotos, dispositivo_origen, historial_estados)
+      VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9, $10)
       RETURNING *
     `;
 
+    const historialInicial = JSON.stringify([{
+      estado: 'recibido',
+      fecha: new Date().toISOString(),
+      usuario_id: usuario_id, // El usuario que crea el reporte
+      notas: 'Reporte creado'
+    }]);
+
     const result = await query(sql, [
-      id, usuario_id, titulo, descripcion, categoria, 
-      longitud, latitud, fotos || [], dispositivo_origen
+      id, usuario_id, titulo, descripcion, categoria,
+      longitud, latitud, fotos || [], dispositivo_origen,
+      historialInicial
     ]);
 
     return result.rows[0];
@@ -44,6 +52,13 @@ class Reporte {
     if (filtros.usuario_id) {
       whereConditions.push(`usuario_id = $${contador}`);
       valores.push(filtros.usuario_id);
+      contador++;
+    }
+
+    // Filtros para Trabajadores (por categoria/departamento)
+    if (filtros.categoria) {
+      whereConditions.push(`categoria = $${contador}`);
+      valores.push(filtros.categoria);
       contador++;
     }
 
@@ -98,6 +113,28 @@ class Reporte {
       throw new Error('No hay campos válidos para actualizar');
     }
 
+    // Manejo especial para actualización de estado
+    if (datosActualizados.estado) {
+      // Obtener historial actual
+      const reporteActual = await this.obtenerPorId(id);
+      let historial = reporteActual.historial_estados || [];
+
+      // Si es string (desde BD), parsear
+      if (typeof historial === 'string') historial = JSON.parse(historial);
+
+      // Agregar nuevo estado
+      historial.push({
+        estado: datosActualizados.estado,
+        fecha: new Date().toISOString(),
+        usuario_id: datosActualizados.usuario_actualizador_id, // Debe pasarse desde el controller
+        notas: datosActualizados.notas || ''
+      });
+
+      campos.push(`historial_estados = $${contador}`);
+      valores.push(JSON.stringify(historial));
+      contador++;
+    }
+
     valores.push(id);
     const sql = `UPDATE reporte SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
 
@@ -113,18 +150,37 @@ class Reporte {
   }
 
   // Estadísticas de reportes
-  async obtenerEstadisticas() {
+  async obtenerEstadisticas(filtros = {}) {
+    let whereConditions = [];
+    let valores = [];
+    let contador = 1;
+
+    if (filtros.usuario_id) {
+      whereConditions.push(`usuario_id = $${contador}`);
+      valores.push(filtros.usuario_id);
+      contador++;
+    }
+
+    if (filtros.categoria) {
+      whereConditions.push(`categoria = $${contador}`);
+      valores.push(filtros.categoria);
+      contador++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
     const sql = `
       SELECT 
         categoria,
         estado,
         COUNT(*) as cantidad
       FROM reporte
+      ${whereClause}
       GROUP BY categoria, estado
       ORDER BY categoria, estado
     `;
 
-    const result = await query(sql);
+    const result = await query(sql, valores);
     return result.rows;
   }
 }

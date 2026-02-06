@@ -5,6 +5,7 @@ import Login from './components/auth/login';
 import Dashboard from './pages/Dashboard';
 import Reports from './pages/Reports';
 import News from './pages/News';
+import AdminUsers from './pages/AdminUsers';
 import Profile from './pages/Profile';
 import PrivateRoute from './components/auth/PrivateRoute';
 import Header from './components/common/Header';
@@ -24,10 +25,10 @@ function AppContent() {
       <CssBaseline />
       {user && <Header />}
       {user && <Sidebar />}
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
           p: 3,
           mt: user ? 8 : 0,
           ml: user ? 0 : 0,
@@ -36,9 +37,9 @@ function AppContent() {
         }}
       >
         <Routes>
-          <Route 
-            path="/login" 
-            element={!user ? <Login /> : <Navigate to="/" replace />} 
+          <Route
+            path="/login"
+            element={!user ? <Login /> : <Navigate to="/" replace />}
           />
           <Route
             path="/"
@@ -59,8 +60,16 @@ function AppContent() {
           <Route
             path="/noticias"
             element={
-              <PrivateRoute requiredRole="admin">
+              <PrivateRoute requiredRole={['admin', 'comunicacion_social']}>
                 <News />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/usuarios"
+            element={
+              <PrivateRoute requiredRole="admin">
+                <AdminUsers />
               </PrivateRoute>
             }
           />
