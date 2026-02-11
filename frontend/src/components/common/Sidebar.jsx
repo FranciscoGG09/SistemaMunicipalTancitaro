@@ -17,7 +17,8 @@ import {
   Assessment as ReportIcon,
   Article as NewsIcon,
   Email as EmailIcon,
-  Person as ProfileIcon
+  Person as ProfileIcon,
+  People as PeopleIcon
 } from '@mui/icons-material';
 
 const drawerWidth = 280;

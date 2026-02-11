@@ -162,7 +162,7 @@ const Reports = () => {
                 <TableCell>{report.category}</TableCell>
                 <TableCell>{report.created_at}</TableCell>
                 <TableCell>
-                  <Chip label={report.status.replace('_', ' ')} color={getStatusColor(report.status)} size="small" />
+                  <Chip label={(report.status || 'recibido').replace('_', ' ')} color={getStatusColor(report.status)} size="small" />
                 </TableCell>
                 <TableCell align="center">
                   <IconButton color="primary" title="Ver Detalles" onClick={() => handleViewClick(report)}>

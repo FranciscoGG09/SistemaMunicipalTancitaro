@@ -1,14 +1,14 @@
 const { query } = require('../config/database');
 
 async function runMigration() {
-    try {
-        console.log('Iniciando conciliación de esquema...');
+  try {
+    console.log('Iniciando conciliación de esquema...');
 
-        // Habilitar PostGIS si es necesario
-        await query('CREATE EXTENSION IF NOT EXISTS postgis');
+    // Habilitar PostGIS si es necesario
+    await query('CREATE EXTENSION IF NOT EXISTS postgis');
 
-        // Tabla Usuario
-        await query(`
+    // Tabla Usuario
+    await query(`
       CREATE TABLE IF NOT EXISTS usuario (
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(100) NOT NULL,
@@ -20,8 +20,8 @@ async function runMigration() {
       )
     `);
 
-        // Tabla Reporte
-        await query(`
+    // Tabla Reporte
+    await query(`
       CREATE TABLE IF NOT EXISTS reporte (
         id VARCHAR(50) PRIMARY KEY, -- ID generado (UUID o similar desde el cliente/server)
         usuario_id INTEGER REFERENCES usuario(id),
@@ -37,8 +37,8 @@ async function runMigration() {
       )
     `);
 
-        // Tabla Noticia
-        await query(`
+    // Tabla Noticia
+    await query(`
       CREATE TABLE IF NOT EXISTS noticia (
         id SERIAL PRIMARY KEY,
         usuario_id INTEGER REFERENCES usuario(id),
@@ -51,12 +51,25 @@ async function runMigration() {
       )
     `);
 
-        console.log('Esquema conciliado exitosamente.');
-    } catch (error) {
-        console.error('Error durante la migración:', error);
-    } finally {
-        process.exit();
-    }
+    // Tabla Correo/Mensajes
+    await query(`
+      CREATE TABLE IF NOT EXISTS correo (
+        id UUID PRIMARY KEY,
+        remitente_id INTEGER REFERENCES usuario(id),
+        destinatarios JSONB NOT NULL, -- Array de IDs de usuarios
+        asunto VARCHAR(200) NOT NULL,
+        cuerpo TEXT NOT NULL,
+        leido_por JSONB DEFAULT '[]', -- Array de IDs que ya leyeron
+        enviado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log('Esquema conciliado exitosamente.');
+  } catch (error) {
+    console.error('Error durante la migración:', error);
+  } finally {
+    process.exit();
+  }
 }
 
 runMigration();

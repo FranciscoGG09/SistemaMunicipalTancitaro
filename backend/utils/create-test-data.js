@@ -8,8 +8,15 @@ async function createTestData() {
   try {
     // 1. Crear usuarios de prueba y obtener sus IDs reales
     console.log('1. Creando usuarios de prueba...');
-    
+
     const usuariosData = [
+      {
+        nombre: 'Administrador Sistema',
+        email: 'admin@tancitaro.gob.mx',
+        password: 'admin123',
+        rol: 'admin',
+        departamento: 'Sistemas'
+      },
       {
         nombre: 'Trabajador Obras Públicas',
         email: 'obras@tancitaro.gob.mx',
@@ -45,20 +52,22 @@ async function createTestData() {
       } else {
         // Crear nuevo usuario
         const passwordHash = await bcrypt.hash(usuarioData.password, 10);
-        const nuevoId = uuidv4();
-        
-        await query(
-          `INSERT INTO usuario (id, nombre, email, password_hash, rol, departamento) 
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [nuevoId, usuarioData.nombre, usuarioData.email, passwordHash, 
-           usuarioData.rol, usuarioData.departamento]
+        // El ID es SERIAL, no UUID
+
+        const result = await query(
+          `INSERT INTO usuario (nombre, email, password_hash, rol, departamento) 
+           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+          [usuarioData.nombre, usuarioData.email, passwordHash,
+          usuarioData.rol, usuarioData.departamento]
         );
-        
+
+        const nuevoId = result.rows[0].id;
+
         usuarios.push({
           id: nuevoId,
           ...usuarioData
         });
-        console.log(`   ✅ Nuevo usuario: ${usuarioData.email}`);
+        console.log(`   ✅ Nuevo usuario: ${usuarioData.email} (ID: ${nuevoId})`);
       }
     }
 
@@ -67,7 +76,7 @@ async function createTestData() {
       'SELECT id, nombre, email, rol FROM usuario WHERE email = $1',
       ['admin@tancitaro.gob.mx']
     );
-    
+
     if (adminResult.rows.length > 0) {
       usuarios.push({
         id: adminResult.rows[0].id,
@@ -86,7 +95,7 @@ async function createTestData() {
 
     // 2. Crear reportes de prueba - USANDO LOS IDs REALES
     console.log('\n2. Creando reportes de prueba...');
-    
+
     const reportes = [
       {
         titulo: 'Bache grande en Av. Principal',
@@ -98,7 +107,7 @@ async function createTestData() {
       {
         titulo: 'Lámpara dañada en Parque Central',
         descripcion: 'Poste de alumbrado con lámpara rota',
-        categoria: 'alumbrado', 
+        categoria: 'alumbrado',
         longitud: -102.351234,
         latitud: 19.338567
       },
@@ -132,8 +141,8 @@ async function createTestData() {
         await query(
           `INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, ubicacion, dispositivo_origen)
            VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8)`,
-          [uuidv4(), usuarioCiudadano.id, reporte.titulo, reporte.descripcion, reporte.categoria, 
-           reporte.longitud, reporte.latitud, 'sistema-prueba']
+          [uuidv4(), usuarioCiudadano.id, reporte.titulo, reporte.descripcion, reporte.categoria,
+          reporte.longitud, reporte.latitud, 'sistema-prueba']
         );
         console.log(`   ✅ Nuevo reporte: ${reporte.titulo}`);
       } else {
@@ -143,7 +152,7 @@ async function createTestData() {
 
     // 3. Crear noticias de prueba
     console.log('\n3. Creando noticias de prueba...');
-    
+
     const noticias = [
       {
         titulo: 'Inicio de Programa de Reforestación',
@@ -152,7 +161,7 @@ async function createTestData() {
         urls_externas: ['https://facebook.com/gobtancitaro/posts/123']
       },
       {
-        titulo: 'Convocatoria para Talleres Municipales', 
+        titulo: 'Convocatoria para Talleres Municipales',
         contenido: 'Se invita a la ciudadanía a participar en talleres gratuitos de manualidades, computación y jardinería.',
         prioritaria: false,
         urls_externas: []
@@ -167,10 +176,10 @@ async function createTestData() {
 
       if (noticiaExistente.rows.length === 0) {
         await query(
-          `INSERT INTO noticia (id, usuario_id, titulo, contenido, prioritaria, urls_externas)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [uuidv4(), usuarioAdmin.id, noticia.titulo, noticia.contenido, 
-           noticia.prioritaria, noticia.urls_externas]
+          `INSERT INTO noticia (usuario_id, titulo, contenido, prioritaria, urls_externas)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [usuarioAdmin.id, noticia.titulo, noticia.contenido,
+          noticia.prioritaria, JSON.stringify(noticia.urls_externas)]
         );
         console.log(`   ✅ Nueva noticia: ${noticia.titulo}`);
       } else {
@@ -180,7 +189,10 @@ async function createTestData() {
 
     // 4. Crear correos de prueba
     console.log('\n4. Creando correos de prueba...');
-    
+
+    // Check if correo table exists first or wrap in try catch if schema might be old
+    // Assuming schema is correct from migration file
+
     const correos = [
       {
         asunto: 'Bienvenida al Sistema Municipal',
@@ -188,7 +200,7 @@ async function createTestData() {
         destinatarios: [usuarioCiudadano.id]
       },
       {
-        asunto: 'Reunión de personal', 
+        asunto: 'Reunión de personal',
         cuerpo: 'Se convoca a reunión de personal el próximo viernes a las 10:00 AM en la sala de juntas.',
         destinatarios: [usuarioTrabajador.id, usuarioAdmin.id]
       }
@@ -204,7 +216,7 @@ async function createTestData() {
         await query(
           `INSERT INTO correo (id, remitente_id, destinatarios, asunto, cuerpo)
            VALUES ($1, $2, $3, $4, $5)`,
-          [uuidv4(), usuarioAdmin.id, correo.destinatarios, correo.asunto, correo.cuerpo]
+          [uuidv4(), usuarioAdmin.id, JSON.stringify(correo.destinatarios), correo.asunto, correo.cuerpo]
         );
         console.log(`   ✅ Nuevo correo: ${correo.asunto}`);
       } else {
@@ -223,7 +235,7 @@ async function createTestData() {
     const noticiasCount = await query('SELECT COUNT(*) as count FROM noticia');
     const correosCount = await query('SELECT COUNT(*) as count FROM correo');
     const usuariosCount = await query('SELECT COUNT(*) as count FROM usuario');
-    
+
     console.log(`   - Usuarios: ${usuariosCount.rows[0].count}`);
     console.log(`   - Reportes: ${reportesCount.rows[0].count}`);
     console.log(`   - Noticias: ${noticiasCount.rows[0].count}`);

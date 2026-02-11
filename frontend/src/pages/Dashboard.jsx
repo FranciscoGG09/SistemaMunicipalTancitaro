@@ -14,6 +14,7 @@ import {
   Email as EmailIcon
 } from '@mui/icons-material';
 import { reportsAPI, newsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
   const { user } = useAuth();
