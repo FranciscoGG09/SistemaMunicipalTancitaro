@@ -16,7 +16,6 @@ import {
   Dashboard as DashboardIcon,
   Assessment as ReportIcon,
   Article as NewsIcon,
-  Email as EmailIcon,
   Person as ProfileIcon,
   People as PeopleIcon
 } from '@mui/icons-material';
@@ -52,12 +51,6 @@ const Sidebar = () => {
       icon: <PeopleIcon />,
       path: '/usuarios',
       roles: ['admin']
-    },
-    {
-      text: 'Correos',
-      icon: <EmailIcon />,
-      path: '/correos',
-      roles: ['admin', 'trabajador']
     },
     {
       text: 'Mi Perfil',

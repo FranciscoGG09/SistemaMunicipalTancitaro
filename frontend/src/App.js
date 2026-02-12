@@ -74,14 +74,6 @@ function AppContent() {
             }
           />
           <Route
-            path="/correos"
-            element={
-              <PrivateRoute requiredRole={['admin', 'trabajador']}>
-                <div>Página de correos - Próximamente</div>
-              </PrivateRoute>
-            }
-          />
-          <Route
             path="/perfil"
             element={
               <PrivateRoute>
