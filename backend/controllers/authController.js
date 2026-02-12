@@ -172,9 +172,63 @@ const obtenerPerfil = async (req, res) => {
   }
 };
 
+// Obtener todos los usuarios (Solo Admin)
+const obtenerUsuarios = async (req, res) => {
+  try {
+    const usuarios = await Usuario.obtenerTodos();
+    res.json({ usuarios });
+  } catch (error) {
+    console.error('Error obteniendo usuarios:', error);
+    res.status(500).json({ error: 'Error interno al obtener usuarios' });
+  }
+};
+
+// Actualizar usuario (Solo Admin)
+const actualizarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const datos = req.body;
+
+    // Evitar que actualicen password por aquí por ahora, o permitirlo si se implementa lógica de hash
+    // Por seguridad simple, eliminamos password si viene
+    delete datos.password;
+
+    const usuarioActualizado = await Usuario.actualizar(id, datos);
+    res.json({ mensaje: 'Usuario actualizado', usuario: usuarioActualizado });
+  } catch (error) {
+    console.error('Error actualizando usuario:', error);
+    res.status(500).json({ error: 'Error interno al actualizar usuario' });
+  }
+};
+
+// Eliminar usuario (Solo Admin)
+const eliminarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Evitar auto-eliminación
+    if (req.usuario.id === id) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+    }
+
+    const resultado = await Usuario.eliminar(id);
+    if (!resultado) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json({ mensaje: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error eliminando usuario:', error);
+    res.status(500).json({ error: 'Error interno al eliminar usuario' });
+  }
+};
+
 module.exports = {
   registrar,
   registrarPublico,
   login,
-  obtenerPerfil
+  obtenerPerfil,
+  obtenerUsuarios,
+  actualizarUsuario,
+  eliminarUsuario
 };

@@ -7,29 +7,55 @@ import {
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
+import { newsAPI } from '../services/api';
+
 const News = () => {
   const { user } = useAuth();
-  const [news, setNews] = useState([]); // Placeholder for news list
+  const [news, setNews] = useState([]);
   const [open, setOpen] = useState(false);
-  const [currentNews, setCurrentNews] = useState({ title: '', content: '' });
+  const [currentNews, setCurrentNews] = useState({ titulo: '', contenido: '' });
+  const [loading, setLoading] = useState(false);
 
   // Check permissions: Admin or ComSoc
   const canManage = ['admin', 'comunicacion_social'].includes(user?.rol);
 
   useEffect(() => {
-    // Fetch news here
-    // mock data
-    setNews([
-      { id: 1, title: 'Inauguración de Parque', content: 'Se inauguró el nuevo parque municipal...', date: '2023-10-25' },
-      { id: 2, title: 'Campaña de Vacunación', content: 'Próxima semana inicia campaña...', date: '2023-10-28' }
-    ]);
+    fetchNews();
   }, []);
 
-  const handleCreate = () => {
-    // API call to create news
-    console.log('Creating news:', currentNews);
-    setOpen(false);
-    // Refresh list
+  const fetchNews = async () => {
+    try {
+      const response = await newsAPI.getAll();
+      setNews(response.data.noticias || response.data);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
+      await newsAPI.create(currentNews);
+      setOpen(false);
+      fetchNews();
+      setCurrentNews({ titulo: '', contenido: '' });
+    } catch (error) {
+      console.error('Error creating news:', error);
+      alert('Error creando noticia');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Estás seguro de eliminar esta noticia?')) {
+      try {
+        await newsAPI.delete(id);
+        fetchNews();
+      } catch (error) {
+        console.error('Error deleting news:', error);
+      }
+    }
   };
 
   return (
@@ -56,19 +82,19 @@ const News = () => {
             <Card elevation={3}>
               <CardContent>
                 <Typography variant="h6" gutterBottom color="primary">
-                  {item.title}
+                  {item.titulo}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  {item.date}
+                  {new Date(item.creado_en || Date.now()).toLocaleDateString()}
                 </Typography>
                 <Typography variant="body1">
-                  {item.content}
+                  {item.contenido}
                 </Typography>
               </CardContent>
               {canManage && (
                 <CardActions>
-                  <Button size="small" startIcon={<Edit />}>Editar</Button>
-                  <Button size="small" color="error" startIcon={<Delete />}>Eliminar</Button>
+                  {/* Edit functionality to be implemented if needed */}
+                  <Button size="small" color="error" startIcon={<Delete />} onClick={() => handleDelete(item.id)}>Eliminar</Button>
                 </CardActions>
               )}
             </Card>
@@ -84,8 +110,8 @@ const News = () => {
             fullWidth
             margin="normal"
             label="Título"
-            value={currentNews.title}
-            onChange={(e) => setCurrentNews({ ...currentNews, title: e.target.value })}
+            value={currentNews.titulo}
+            onChange={(e) => setCurrentNews({ ...currentNews, titulo: e.target.value })}
           />
           <TextField
             fullWidth
@@ -93,13 +119,13 @@ const News = () => {
             label="Contenido"
             multiline
             rows={4}
-            value={currentNews.content}
-            onChange={(e) => setCurrentNews({ ...currentNews, content: e.target.value })}
+            value={currentNews.contenido}
+            onChange={(e) => setCurrentNews({ ...currentNews, contenido: e.target.value })}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={handleCreate} variant="contained">Publicar</Button>
+          <Button onClick={handleCreate} variant="contained" disabled={loading}>Publicar</Button>
         </DialogActions>
       </Dialog>
     </Box>

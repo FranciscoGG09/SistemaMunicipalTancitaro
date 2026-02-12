@@ -41,6 +41,9 @@ export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/registrar', userData),
   getProfile: () => api.get('/auth/perfil'),
+  getAllUsers: () => api.get('/auth/usuarios'),
+  updateUser: (id, data) => api.put(`/auth/usuarios/${id}`, data),
+  deleteUser: (id) => api.delete(`/auth/usuarios/${id}`),
 };
 
 export const reportsAPI = {

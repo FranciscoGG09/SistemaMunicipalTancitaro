@@ -20,7 +20,9 @@ const crearReporte = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
       const results = await Promise.all(uploadPromises);
-      fotosUrls = results.map(result => result.secure_url);
+      fotosUrls = results
+        .map(result => result.secure_url)
+        .filter(url => url !== null);
     }
 
     const reporteData = {

@@ -86,7 +86,7 @@ const Reports = () => {
 
   const handleUpdateClick = (report) => {
     setSelectedReport(report);
-    setNewStatus(report.status);
+    setNewStatus(report.estado);
     setOpenUpdate(true);
   };
 
@@ -158,11 +158,11 @@ const Reports = () => {
           <TableBody>
             {reports.map((report) => (
               <TableRow key={report.id}>
-                <TableCell>{report.title}</TableCell>
-                <TableCell>{report.category}</TableCell>
-                <TableCell>{report.created_at}</TableCell>
+                <TableCell>{report.titulo}</TableCell>
+                <TableCell>{report.categoria}</TableCell>
+                <TableCell>{new Date(report.creado_en).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <Chip label={(report.status || 'recibido').replace('_', ' ')} color={getStatusColor(report.status)} size="small" />
+                  <Chip label={(report.estado || 'recibido').replace('_', ' ')} color={getStatusColor(report.estado)} size="small" />
                 </TableCell>
                 <TableCell align="center">
                   <IconButton color="primary" title="Ver Detalles" onClick={() => handleViewClick(report)}>
@@ -186,12 +186,12 @@ const Reports = () => {
         <DialogContent dividers>
           {selectedReport && (
             <Box>
-              <Typography variant="h6">{selectedReport.title}</Typography>
+              <Typography variant="h6">{selectedReport.titulo}</Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Categoría: {selectedReport.category}
+                Categoría: {selectedReport.categoria}
               </Typography>
               <Typography variant="body1" paragraph>
-                {selectedReport.description || 'Sin descripción'}
+                {selectedReport.descripcion || 'Sin descripción'}
               </Typography>
 
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>

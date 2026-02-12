@@ -34,6 +34,13 @@ const upload = multer({
 // Helper para subir buffer a Cloudinary
 const uploadToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
+    // Verificar si la configuración de Cloudinary es válida o usamos placeholders
+    if (!process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_KEY === 'tu_api_key') {
+      console.warn('Cloudinary no configurado correctamente. Saltando subida de imagen.');
+      // Devolvemos un objeto que simula una respuesta vacía/sin url segura
+      return resolve({ secure_url: null });
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: 'reportes-tancitaro' },
       (error, result) => {

@@ -13,10 +13,20 @@ const crearNoticia = async (req, res) => {
       });
     }
 
+    // Procesar imágenes si existen
+    let adjuntosUrls = [];
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+      const results = await Promise.all(uploadPromises);
+      adjuntosUrls = results
+        .map(result => result.secure_url)
+        .filter(url => url !== null);
+    }
+
     const noticiaData = {
       titulo,
       contenido,
-      adjuntos: adjuntos || [],
+      adjuntos: adjuntosUrls,
       urls_externas: urls_externas || [],
       prioritaria: prioritaria || false,
       usuario_id: req.usuario.id

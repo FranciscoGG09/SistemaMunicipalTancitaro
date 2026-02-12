@@ -83,6 +83,19 @@ class Usuario {
     const result = await query(sql, valores);
     return result.rows[0];
   }
+  // Obtener todos los usuarios
+  async obtenerTodos() {
+    const sql = 'SELECT id, nombre, email, rol, departamento, creado_en FROM usuario ORDER BY creado_en DESC';
+    const result = await query(sql);
+    return result.rows;
+  }
+
+  // Eliminar usuario
+  async eliminar(id) {
+    const sql = 'DELETE FROM usuario WHERE id = $1 RETURNING id';
+    const result = await query(sql, [id]);
+    return result.rows[0];
+  }
 }
 
 module.exports = new Usuario();
