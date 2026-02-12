@@ -15,6 +15,7 @@ import {
 } from '@mui/icons-material';
 import { reportsAPI, newsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import ReportMap from '../components/dashboard/ReportMap';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -135,6 +136,14 @@ const Dashboard = () => {
             </Card>
           </Grid>
         ))}
+      </Grid>
+
+      {/* Mapa de Reportes */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12}>
+          {/* Lazy load or just import if possible. For now assuming import at top */}
+          <ReportMap />
+        </Grid>
       </Grid>
 
       {/* Contenido adicional basado en rol */}
