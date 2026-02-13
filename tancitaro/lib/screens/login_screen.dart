@@ -5,6 +5,8 @@ import 'register_screen.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -39,27 +41,28 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Iniciar Sesión')),
+      appBar: AppBar(title: const Text('Iniciar Sesión')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Correo Electrónico'),
+              decoration:
+                  const InputDecoration(labelText: 'Correo Electrónico'),
               keyboardType: TextInputType.emailAddress,
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Contraseña'),
+              decoration: const InputDecoration(labelText: 'Contraseña'),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _login,
-                    child: Text('Ingresar'),
+                    child: const Text('Ingresar'),
                   ),
             TextButton(
               onPressed: () {
@@ -68,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(builder: (context) => RegisterScreen()),
                 );
               },
-              child: Text('¿No tienes cuenta? Regístrate'),
+              child: const Text('¿No tienes cuenta? Regístrate'),
             ),
           ],
         ),

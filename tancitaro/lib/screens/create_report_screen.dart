@@ -5,6 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import '../services/report_service.dart';
 
 class CreateReportScreen extends StatefulWidget {
+  const CreateReportScreen({super.key});
+
   @override
   _CreateReportScreenState createState() => _CreateReportScreenState();
 }
@@ -48,7 +50,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Por favor activa la ubicación')));
+          const SnackBar(content: Text('Por favor activa la ubicación')));
       return null;
     }
 
@@ -57,13 +59,13 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Permiso de ubicación denegado')));
+            const SnackBar(content: Text('Permiso de ubicación denegado')));
         return null;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Permiso de ubicación denegado permanentemente')));
       return null;
     }
@@ -75,7 +77,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   void _enviarReporte() async {
     if (_tituloController.text.isEmpty || _image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Título y Foto son obligatorios')));
+          const SnackBar(content: Text('Título y Foto son obligatorios')));
       return;
     }
 
@@ -109,9 +111,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Nuevo Reporte')),
+      appBar: AppBar(title: const Text('Nuevo Reporte')),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -127,22 +129,24 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         children: [
                           Icon(Icons.camera_alt,
                               size: 50, color: Colors.grey[600]),
-                          Text('Presiona para tomar foto'),
+                          const Text('Presiona para tomar foto'),
                         ],
                       ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: _tituloController,
-              decoration: InputDecoration(labelText: 'Título del Problema'),
+              decoration:
+                  const InputDecoration(labelText: 'Título del Problema'),
             ),
             TextField(
               controller: _descripcionController,
-              decoration: InputDecoration(labelText: 'Descripción detallada'),
+              decoration:
+                  const InputDecoration(labelText: 'Descripción detallada'),
               maxLines: 3,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               value: _categoriaSeleccionada,
               items: _categorias.map((String category) {
@@ -156,17 +160,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   _categoriaSeleccionada = newValue!;
                 });
               },
-              decoration: InputDecoration(labelText: 'Categoría'),
+              decoration: const InputDecoration(labelText: 'Categoría'),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             _isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton.icon(
                     onPressed: _enviarReporte,
-                    icon: Icon(Icons.send),
-                    label: Text('Enviar Reporte'),
+                    icon: const Icon(Icons.send),
+                    label: const Text('Enviar Reporte'),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 15),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                   ),
           ],

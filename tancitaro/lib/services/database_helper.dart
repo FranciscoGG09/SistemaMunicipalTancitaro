@@ -50,9 +50,10 @@ class DatabaseHelper {
 
   Future<int> deleteReporte(int id) async {
     Database db = await database;
-    return await db.delete('reportes_pendientes', where: 'id = ?', whereArgs: [id]);
+    return await db
+        .delete('reportes_pendientes', where: 'id = ?', whereArgs: [id]);
   }
-  
+
   Future<void> clearReportes() async {
     Database db = await database;
     await db.delete('reportes_pendientes');

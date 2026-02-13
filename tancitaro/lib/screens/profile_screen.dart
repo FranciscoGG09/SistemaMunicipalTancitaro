@@ -144,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 5),
                     if (user?.email != null)
                       Text(
-                        user!.email!,
+                        user!.email,
                         style:
                             const TextStyle(fontSize: 16, color: Colors.grey),
                       ),

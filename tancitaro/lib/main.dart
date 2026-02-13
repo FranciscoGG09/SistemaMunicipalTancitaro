@@ -17,6 +17,8 @@ void main() async {
 class MyApp extends StatelessWidget {
   final AuthService _authService = AuthService();
 
+  MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,7 +31,8 @@ class MyApp extends StatelessWidget {
         future: _authService.getToken(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const Scaffold(
+                body: Center(child: CircularProgressIndicator()));
           }
           // If has token, go to Home, else Login
           if (snapshot.hasData && snapshot.data != null) {

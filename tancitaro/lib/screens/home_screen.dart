@@ -11,6 +11,8 @@ import 'profile_screen.dart';
 
 // News Screen
 class NewsScreen extends StatefulWidget {
+  const NewsScreen({super.key});
+
   @override
   _NewsScreenState createState() => _NewsScreenState();
 }
@@ -24,13 +26,13 @@ class _NewsScreenState extends State<NewsScreen> {
       future: _newsService.getNoticias(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error al cargar noticias'));
+          return const Center(child: Text('Error al cargar noticias'));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No hay noticias disponibles'));
+          return const Center(child: Text('No hay noticias disponibles'));
         }
 
         return ListView.builder(
@@ -38,7 +40,7 @@ class _NewsScreenState extends State<NewsScreen> {
           itemBuilder: (context, index) {
             final noticia = snapshot.data![index];
             return Card(
-              margin: EdgeInsets.all(8.0),
+              margin: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -52,7 +54,7 @@ class _NewsScreenState extends State<NewsScreen> {
                       errorBuilder: (context, error, stackTrace) => Container(
                           height: 200,
                           color: Colors.grey,
-                          child: Icon(Icons.broken_image)),
+                          child: const Icon(Icons.broken_image)),
                     ),
                   Padding(
                     padding: const EdgeInsets.all(12.0),
@@ -61,21 +63,22 @@ class _NewsScreenState extends State<NewsScreen> {
                       children: [
                         Text(
                           noticia['titulo'] ?? 'Sin Título',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           noticia['contenido'] ?? '',
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          new DateFormat('dd/MM/yyyy').format(DateTime.parse(
+                          DateFormat('dd/MM/yyyy').format(DateTime.parse(
                               noticia['publicado_en'] ??
                                   DateTime.now().toIso8601String())),
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
                     ),
@@ -92,6 +95,8 @@ class _NewsScreenState extends State<NewsScreen> {
 
 // My Reports Screen
 class MyReportsScreen extends StatefulWidget {
+  const MyReportsScreen({super.key});
+
   @override
   _MyReportsScreenState createState() => _MyReportsScreenState();
 }
@@ -122,49 +127,45 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return Center(child: CircularProgressIndicator());
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
 
     if (_onlineReports.isEmpty && _offlineReports.isEmpty) {
-      return Center(child: Text('No tienes reportes creados'));
+      return const Center(child: Text('No tienes reportes creados'));
     }
 
     return ListView(
       children: [
         if (_offlineReports.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text('Pendientes de sincronizar',
                 style: TextStyle(
                     fontWeight: FontWeight.bold, color: Colors.orange)),
           ),
-          ..._offlineReports
-              .map((reporte) => ListTile(
-                    leading: Icon(Icons.sync_problem, color: Colors.orange),
-                    title: Text(reporte['titulo']),
-                    subtitle: Text(reporte['fecha'] ?? ''),
-                    trailing: Text('Offline'),
-                  ))
-              .toList(),
-          Divider(),
+          ..._offlineReports.map((reporte) => ListTile(
+                leading: const Icon(Icons.sync_problem, color: Colors.orange),
+                title: Text(reporte['titulo']),
+                subtitle: Text(reporte['fecha'] ?? ''),
+                trailing: const Text('Offline'),
+              )),
+          const Divider(),
         ],
         if (_onlineReports.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text('Enviados',
                 style:
                     TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
           ),
-          ..._onlineReports
-              .map((reporte) => ListTile(
-                    leading: Icon(Icons.check_circle, color: Colors.green),
-                    title: Text(reporte['titulo']),
-                    subtitle: Text(reporte['estado']),
-                    trailing: Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Ver detalles
-                    },
-                  ))
-              .toList(),
+          ..._onlineReports.map((reporte) => ListTile(
+                leading: const Icon(Icons.check_circle, color: Colors.green),
+                title: Text(reporte['titulo']),
+                subtitle: Text(reporte['estado']),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  // Ver detalles
+                },
+              )),
         ]
       ],
     );
@@ -172,6 +173,8 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
 }
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -201,10 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  static List<Widget> _widgetOptions = <Widget>[
+  static final List<Widget> _widgetOptions = <Widget>[
     NewsScreen(),
     MyReportsScreen(),
-    ProfileScreen(),
+    const ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -226,9 +229,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tancítaro Digital'),
+        title: const Text('Tancítaro Digital'),
         actions: [
-          IconButton(icon: Icon(Icons.logout), onPressed: _logout),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
@@ -240,8 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(builder: (context) => CreateReportScreen()),
                 );
               },
-              child: Icon(Icons.add_a_photo),
               tooltip: 'Crear Reporte',
+              child: Icon(Icons.add_a_photo),
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(
