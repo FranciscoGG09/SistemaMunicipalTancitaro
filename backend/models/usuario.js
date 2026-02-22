@@ -59,19 +59,29 @@ class Usuario {
 
   // Actualizar usuario
   async actualizar(id, datosActualizados) {
-    const camposPermitidos = ['nombre', 'departamento'];
+    const camposPermitidos = ['nombre', 'password', 'rol', 'departamento']; // Permitimos todos en el modelo, pero el UI los restringe
     const campos = [];
     const valores = [];
     let contador = 1;
 
     // Construir dinámicamente la consulta
-    Object.keys(datosActualizados).forEach(key => {
+    for (const key of Object.keys(datosActualizados)) {
       if (camposPermitidos.includes(key)) {
-        campos.push(`${key} = $${contador}`);
-        valores.push(datosActualizados[key]);
+        let valor = datosActualizados[key];
+        let campo = key;
+
+        // Si es password, solo actualizar si tiene valor y mapear a password_hash
+        if (key === 'password') {
+          if (!valor) continue; // Saltar si está vacío
+          valor = await bcrypt.hash(valor, 10);
+          campo = 'password_hash';
+        }
+
+        campos.push(`${campo} = $${contador}`);
+        valores.push(valor);
         contador++;
       }
-    });
+    }
 
     if (campos.length === 0) {
       throw new Error('No hay campos válidos para actualizar');
@@ -92,6 +102,10 @@ class Usuario {
 
   // Eliminar usuario
   async eliminar(id) {
+    // Primero eliminar reportes asociados para evitar violación de llave foránea
+    await query('DELETE FROM reporte WHERE usuario_id = $1', [id]);
+
+    // Luego eliminar el usuario
     const sql = 'DELETE FROM usuario WHERE id = $1 RETURNING id';
     const result = await query(sql, [id]);
     return result.rows[0];

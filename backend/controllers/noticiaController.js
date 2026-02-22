@@ -1,5 +1,6 @@
 const Noticia = require('../models/noticia');
 const { v4: uuidv4 } = require('uuid');
+const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
 
 // Crear una nueva noticia
 const crearNoticia = async (req, res) => {
@@ -16,7 +17,7 @@ const crearNoticia = async (req, res) => {
     // Procesar imágenes si existen
     let adjuntosUrls = [];
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, file.mimetype));
       const results = await Promise.all(uploadPromises);
       adjuntosUrls = results
         .map(result => result.secure_url)

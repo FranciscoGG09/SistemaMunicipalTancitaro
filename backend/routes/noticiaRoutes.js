@@ -7,6 +7,7 @@ const {
   eliminarNoticia
 } = require('../controllers/noticiaController');
 const { verificarToken, verificarPermisoNoticia } = require('../middleware/authMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.get('/', obtenerNoticias);
 router.get('/:id', obtenerNoticiaPorId);
 
 // Rutas protegidas (solo administradores y comunicación social pueden crear, actualizar y eliminar)
-router.post('/', verificarPermisoNoticia, crearNoticia);
+router.post('/', verificarPermisoNoticia, upload.array('imagen', 1), crearNoticia);
 router.put('/:id', verificarPermisoNoticia, actualizarNoticia);
 router.delete('/:id', verificarPermisoNoticia, eliminarNoticia);
 

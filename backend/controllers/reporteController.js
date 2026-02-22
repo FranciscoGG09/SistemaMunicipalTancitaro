@@ -18,7 +18,7 @@ const crearReporte = async (req, res) => {
     // Procesar imágenes si existen
     let fotosUrls = [];
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+      const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, file.mimetype));
       const results = await Promise.all(uploadPromises);
       fotosUrls = results
         .map(result => result.secure_url)
@@ -183,7 +183,27 @@ const actualizarReporte = async (req, res) => {
 };
 
 const eliminarReporte = async (req, res) => {
-  res.json({ mensaje: 'Eliminar reporte - pendiente' });
+  try {
+    const { id } = req.params;
+
+    // Verificar si el reporte existe
+    const reporte = await Reporte.obtenerPorId(id);
+    if (!reporte) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
+    }
+
+    await Reporte.eliminar(id);
+
+    res.json({
+      mensaje: 'Reporte eliminado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error eliminando reporte:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor al eliminar reporte'
+    });
+  }
 };
 
 const obtenerEstadisticas = async (req, res) => {

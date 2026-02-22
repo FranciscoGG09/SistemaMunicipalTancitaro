@@ -189,10 +189,7 @@ const actualizarUsuario = async (req, res) => {
     const { id } = req.params;
     const datos = req.body;
 
-    // Evitar que actualicen password por aquí por ahora, o permitirlo si se implementa lógica de hash
-    // Por seguridad simple, eliminamos password si viene
-    delete datos.password;
-
+    // El password ahora se permite y se hashea en el modelo
     const usuarioActualizado = await Usuario.actualizar(id, datos);
     res.json({ mensaje: 'Usuario actualizado', usuario: usuarioActualizado });
   } catch (error) {

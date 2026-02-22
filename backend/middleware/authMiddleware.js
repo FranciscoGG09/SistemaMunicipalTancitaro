@@ -67,9 +67,20 @@ const verificarPermisoNoticia = (req, res, next) => {
   next();
 };
 
+// Verificar que NO sea trabajador (para creación de reportes: solo admin y ciudadano)
+const verificarNoTrabajador = (req, res, next) => {
+  if (req.usuario.rol === 'trabajador') {
+    return res.status(403).json({
+      error: 'Los trabajadores no pueden crear reportes'
+    });
+  }
+  next();
+};
+
 module.exports = {
   verificarToken,
   verificarAdmin,
   verificarTrabajador,
-  verificarPermisoNoticia
+  verificarPermisoNoticia,
+  verificarNoTrabajador
 };

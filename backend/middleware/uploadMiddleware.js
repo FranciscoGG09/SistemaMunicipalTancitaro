@@ -1,15 +1,10 @@
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Configurar Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// La configuración de Cloudinary se elimina ya que usaremos Base64 en la base de datos
+
 
 // Configurar almacenamiento (usando memoria si no está el paquete de storage, 
 // pero vamos a asumir que podemos usar stream o intentar instalarlo si falla. 
@@ -31,24 +26,15 @@ const upload = multer({
   }
 });
 
-// Helper para subir buffer a Cloudinary
-const uploadToCloudinary = (buffer) => {
-  return new Promise((resolve, reject) => {
-    // Verificar si la configuración de Cloudinary es válida o usamos placeholders
-    if (!process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_KEY === 'tu_api_key') {
-      console.warn('Cloudinary no configurado correctamente. Saltando subida de imagen.');
-      // Devolvemos un objeto que simula una respuesta vacía/sin url segura
-      return resolve({ secure_url: null });
-    }
+// Helper para convertir buffer a Base64 (anteriormente uploadToCloudinary)
+const uploadToCloudinary = (buffer, mimetype) => {
+  return new Promise((resolve) => {
+    // Convertimos el buffer a una cadena Base64 con el prefijo de data URI
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${mimetype || 'image/jpeg'};base64,${base64}`;
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: 'reportes-tancitaro' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    uploadStream.end(buffer);
+    // Devolvemos el mismo formato de objeto para no romper los controladores existentes
+    resolve({ secure_url: dataUrl });
   });
 };
 

@@ -14,10 +14,10 @@ class Noticia {
     `;
 
     const result = await query(sql, [
-      titulo, contenido, 
-      adjuntos || [], 
-      urls_externas || [], 
-      prioritaria || false, 
+      titulo, contenido,
+      JSON.stringify(adjuntos || []),
+      JSON.stringify(urls_externas || []),
+      prioritaria || false,
       usuario_id
     ]);
 
@@ -78,8 +78,15 @@ class Noticia {
 
     Object.keys(datosActualizados).forEach(key => {
       if (camposPermitidos.includes(key) && datosActualizados[key] !== undefined) {
+        let valor = datosActualizados[key];
+
+        // Si es un campo JSONB (array), stringificarlo
+        if (['adjuntos', 'urls_externas'].includes(key) && Array.isArray(valor)) {
+          valor = JSON.stringify(valor);
+        }
+
         campos.push(`${key} = $${contador}`);
-        valores.push(datosActualizados[key]);
+        valores.push(valor);
         contador++;
       }
     });

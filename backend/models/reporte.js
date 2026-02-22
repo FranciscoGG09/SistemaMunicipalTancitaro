@@ -23,7 +23,7 @@ class Reporte {
 
     const result = await query(sql, [
       id, usuario_id, titulo, descripcion, categoria,
-      longitud, latitud, fotos || [], dispositivo_origen,
+      longitud, latitud, JSON.stringify(fotos || []), dispositivo_origen,
       historialInicial
     ]);
 
@@ -66,7 +66,7 @@ class Reporte {
 
     // Consulta principal con paginación
     const sql = `
-      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
+      SELECT r.*, ST_Y(r.ubicacion) as latitud, ST_X(r.ubicacion) as longitud, u.nombre as usuario_nombre, u.email as usuario_email
       FROM reporte r
       LEFT JOIN usuario u ON r.usuario_id = u.id
       ${whereClause}
@@ -84,7 +84,7 @@ class Reporte {
   // Obtener reporte por ID
   async obtenerPorId(id) {
     const sql = `
-      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
+      SELECT r.*, ST_Y(r.ubicacion) as latitud, ST_X(r.ubicacion) as longitud, u.nombre as usuario_nombre, u.email as usuario_email
       FROM reporte r
       LEFT JOIN usuario u ON r.usuario_id = u.id
       WHERE r.id = $1

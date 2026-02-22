@@ -81,7 +81,7 @@ const Login = () => {
             InputProps={{
               startAdornment: <AccountCircle sx={{ color: 'action.active', mr: 1 }} />
             }}
-            placeholder="admin@tancitaro.gob.mx"
+            placeholder="correo@ejemplo.com"
           />
           <TextField
             margin="normal"
@@ -97,7 +97,7 @@ const Login = () => {
             InputProps={{
               startAdornment: <Lock sx={{ color: 'action.active', mr: 1 }} />
             }}
-            placeholder="admin123"
+            placeholder="••••••••"
           />
           <Button
             type="submit"
@@ -119,20 +119,7 @@ const Login = () => {
           </Button>
         </Box>
 
-        <Box sx={{ mt: 2, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-          <Typography variant="caption" color="textSecondary">
-            <strong>Credenciales de prueba:</strong>
-          </Typography>
-          <Typography variant="caption" display="block">
-            👑 Admin: admin@tancitaro.gob.mx / admin123
-          </Typography>
-          <Typography variant="caption" display="block">
-            👷 Trabajador: obras@tancitaro.gob.mx / password123
-          </Typography>
-          <Typography variant="caption" display="block">
-            👤 Ciudadano: ciudadano@ejemplo.com / password123
-          </Typography>
-        </Box>
+
       </Paper>
     </Container>
   );

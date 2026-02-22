@@ -5,7 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, MenuItem, TextField, Button, Grid
 } from '@mui/material';
-import { Edit, Visibility, Add } from '@mui/icons-material';
+import { Edit, Visibility, Add, Delete } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { reportsAPI } from '../services/api';
 
@@ -30,6 +30,8 @@ const Reports = () => {
   });
 
   const canUpdate = ['admin', 'trabajador'].includes(user?.rol);
+  const canCreate = ['admin', 'ciudadano'].includes(user?.rol);
+  const canDelete = user?.rol === 'admin';
 
   useEffect(() => {
     fetchReports();
@@ -97,7 +99,7 @@ const Reports = () => {
         notas: notes
       });
       setOpenUpdate(false);
-      fetchReports(); // Refresh list
+      fetchReports();
     } catch (error) {
       console.error('Error updating report:', error);
     }
@@ -108,15 +110,16 @@ const Reports = () => {
     setOpenView(true);
   };
 
-  const calculateDuration = (history) => {
-    if (!history || history.length < 2) return 'N/A';
-    // Logic to calculate duration would go here
-    return history.map((h, i) => (
-      <li key={i}>
-        <strong>{h.estado}</strong>: {new Date(h.fecha).toLocaleString()}
-        {h.notas && <span> - {h.notas}</span>}
-      </li>
-    ));
+  const handleDeleteClick = async (report) => {
+    if (window.confirm(`¿Estás seguro de eliminar el reporte "${report.titulo}"?`)) {
+      try {
+        await reportsAPI.delete(report.id);
+        fetchReports();
+      } catch (error) {
+        console.error('Error deleting report:', error);
+        alert('Error eliminando reporte');
+      }
+    }
   };
 
   const getStatusColor = (status) => {
@@ -134,14 +137,16 @@ const Reports = () => {
         <Typography variant="h4" fontWeight="bold" sx={{ color: 'var(--primary-blue)' }}>
           📋 Reportes Ciudadanos
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreateClick}
-          sx={{ backgroundColor: 'var(--primary-blue)' }}
-        >
-          Nuevo Reporte
-        </Button>
+        {canCreate && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleCreateClick}
+            sx={{ backgroundColor: 'var(--primary-blue)' }}
+          >
+            Nuevo Reporte
+          </Button>
+        )}
       </Box>
 
       <TableContainer component={Paper} elevation={3}>
@@ -173,6 +178,11 @@ const Reports = () => {
                       <Edit />
                     </IconButton>
                   )}
+                  {canDelete && (
+                    <IconButton color="error" title="Eliminar Reporte" onClick={() => handleDeleteClick(report)}>
+                      <Delete />
+                    </IconButton>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -181,7 +191,7 @@ const Reports = () => {
       </TableContainer>
 
       {/* Dialog View Details */}
-      <Dialog open={openView} onClose={() => setOpenView(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openView} onClose={() => setOpenView(false)} maxWidth="md" fullWidth>
         <DialogTitle>Detalles del Reporte</DialogTitle>
         <DialogContent dividers>
           {selectedReport && (
@@ -190,16 +200,85 @@ const Reports = () => {
               <Typography variant="body2" color="textSecondary" gutterBottom>
                 Categoría: {selectedReport.categoria}
               </Typography>
-              <Typography variant="body1" paragraph>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Estado: <Chip label={(selectedReport.estado || 'recibido').replace('_', ' ')} color={getStatusColor(selectedReport.estado)} size="small" />
+              </Typography>
+              <Typography variant="body1" paragraph sx={{ mt: 1 }}>
                 {selectedReport.descripcion || 'Sin descripción'}
               </Typography>
+
+              {/* Fotos del reporte */}
+              {selectedReport.fotos && selectedReport.fotos.length > 0 && selectedReport.fotos.some(f => f) && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    📷 Evidencia Fotográfica
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {selectedReport.fotos.filter(f => f).map((foto, index) => (
+                      <Grid item xs={12} sm={6} key={index}>
+                        <Box
+                          component="img"
+                          src={foto}
+                          alt={`Evidencia ${index + 1}`}
+                          sx={{
+                            width: '100%',
+                            maxHeight: 300,
+                            objectFit: 'cover',
+                            borderRadius: 2,
+                            border: '1px solid #ddd'
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Mapa de ubicación */}
+              {selectedReport.latitud && selectedReport.longitud && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                    📍 Ubicación del Reporte
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary" gutterBottom>
+                    Coordenadas: {Number(selectedReport.latitud).toFixed(5)}, {Number(selectedReport.longitud).toFixed(5)}
+                  </Typography>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 300,
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      border: '1px solid #ddd'
+                    }}
+                  >
+                    <iframe
+                      title="Ubicación del reporte"
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(selectedReport.longitud) - 0.005},${Number(selectedReport.latitud) - 0.005},${Number(selectedReport.longitud) + 0.005},${Number(selectedReport.latitud) + 0.005}&layer=mapnik&marker=${Number(selectedReport.latitud)},${Number(selectedReport.longitud)}`}
+                      allowFullScreen
+                    />
+                  </Box>
+                </Box>
+              )}
 
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
                 Historial de Estatus
               </Typography>
               <ul>
-                {/* Mock history implementation */}
-                <li><strong>creado:</strong> {selectedReport.created_at}</li>
+                {selectedReport.historial_estados && Array.isArray(selectedReport.historial_estados) ? (
+                  selectedReport.historial_estados.map((h, i) => (
+                    <li key={i}>
+                      <strong>{h.estado}</strong>: {new Date(h.fecha).toLocaleString()}
+                      {h.notas && <span> - {h.notas}</span>}
+                    </li>
+                  ))
+                ) : (
+                  <li><strong>creado:</strong> {new Date(selectedReport.creado_en).toLocaleString()}</li>
+                )}
               </ul>
             </Box>
           )}
@@ -259,12 +338,10 @@ const Reports = () => {
               label="Categoría"
               onChange={(e) => setNewReport({ ...newReport, categoria: e.target.value })}
             >
-              <MenuItem value="Alumbrado">Alumbrado</MenuItem>
               <MenuItem value="Obras Publicas">Obras Públicas</MenuItem>
-              <MenuItem value="Parques y Jardines">Parques y Jardines</MenuItem>
-              <MenuItem value="Agua Potable">Agua Potable</MenuItem>
-              <MenuItem value="Seguridad">Seguridad</MenuItem>
-              <MenuItem value="Otros">Otros</MenuItem>
+              <MenuItem value="Servicios Municipales">Servicios Municipales</MenuItem>
+              <MenuItem value="OOAPAS">OOAPAS</MenuItem>
+              <MenuItem value="Seguridad Publica">Seguridad Pública</MenuItem>
             </Select>
           </FormControl>
           <TextField

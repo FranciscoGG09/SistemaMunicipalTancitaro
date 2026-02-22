@@ -38,7 +38,11 @@ const AdminUsers = () => {
     const fetchUsers = async () => {
         try {
             const response = await authAPI.getAllUsers();
-            setUsers(response.data.usuarios);
+            // Ocultar el usuario admin del sistema
+            const filtered = (response.data.usuarios || []).filter(
+                u => u.email !== 'admin@tancitaro.gob.mx'
+            );
+            setUsers(filtered);
         } catch (err) {
             console.error('Error fetching users:', err);
             setError('Error al cargar usuarios. Asegúrese de ser administrador.');
@@ -210,10 +214,9 @@ const AdminUsers = () => {
                                     onChange={(e) => setNewUser({ ...newUser, departamento: e.target.value })}
                                 >
                                     <MenuItem value="Obras Publicas">Obras Públicas</MenuItem>
-                                    <MenuItem value="Alumbrado">Alumbrado</MenuItem>
-                                    <MenuItem value="Parques y Jardines">Parques y Jardines</MenuItem>
-                                    <MenuItem value="Agua Potable">Agua Potable</MenuItem>
-                                    <MenuItem value="Limpia">Limpia</MenuItem>
+                                    <MenuItem value="Servicios Municipales">Servicios Municipales</MenuItem>
+                                    <MenuItem value="OOAPAS">OOAPAS</MenuItem>
+                                    <MenuItem value="Seguridad Publica">Seguridad Pública</MenuItem>
                                 </Select>
                             </FormControl>
                         )}
@@ -245,14 +248,14 @@ const AdminUsers = () => {
                                     label="Email"
                                     type="email"
                                     value={editingUser.email}
-                                    disabled // No permitir editar email por id de negocio usualmente, o dejarlo
+                                    disabled
                                 />
                                 <FormControl fullWidth margin="normal">
                                     <InputLabel>Rol</InputLabel>
                                     <Select
                                         value={editingUser.rol}
                                         label="Rol"
-                                        onChange={(e) => setEditingUser({ ...editingUser, rol: e.target.value })}
+                                        disabled
                                     >
                                         <MenuItem value="admin">Administrador</MenuItem>
                                         <MenuItem value="comunicacion_social">Comunicación Social</MenuItem>
@@ -266,16 +269,23 @@ const AdminUsers = () => {
                                         <Select
                                             value={editingUser.departamento || ''}
                                             label="Departamento"
-                                            onChange={(e) => setEditingUser({ ...editingUser, departamento: e.target.value })}
+                                            disabled
                                         >
                                             <MenuItem value="Obras Publicas">Obras Públicas</MenuItem>
-                                            <MenuItem value="Alumbrado">Alumbrado</MenuItem>
-                                            <MenuItem value="Parques y Jardines">Parques y Jardines</MenuItem>
-                                            <MenuItem value="Agua Potable">Agua Potable</MenuItem>
-                                            <MenuItem value="Limpia">Limpia</MenuItem>
+                                            <MenuItem value="Servicios Municipales">Servicios Municipales</MenuItem>
+                                            <MenuItem value="OOAPAS">OOAPAS</MenuItem>
+                                            <MenuItem value="Seguridad Publica">Seguridad Pública</MenuItem>
                                         </Select>
                                     </FormControl>
                                 )}
+                                <TextField
+                                    fullWidth
+                                    margin="normal"
+                                    label="Nueva Contraseña (dejar vacío para no cambiar)"
+                                    type="password"
+                                    value={editingUser.password || ''}
+                                    onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                                />
                             </>
                         )}
                     </Box>
