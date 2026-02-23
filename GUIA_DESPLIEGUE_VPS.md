@@ -1,123 +1,91 @@
 # Guía de Despliegue VPS - Sistema Municipal Tancítaro
 
-Esta guía detalla los pasos para desplegar el proyecto en un servidor VPS (Ubuntu/Debian recomendado).
+Esta guía detalla los pasos para desplegar el proyecto en un servidor VPS (Ubuntu/Plesk recomendado).
 
-## 1. Prerrequisitos del Servidor
-Asegúrate de tener instalado lo siguiente en tu VPS:
-- **Node.js** (versión 18 o superior)
-- **PostgreSQL** (versión 14 o superior)
-- **Git**
-- **PM2** (para mantener la aplicación corriendo: `npm install -g pm2`)
+## 1. Prerrequisitos del Servidor (VPS / Plesk)
+Si usas **Plesk**, la mayoría de estos se instalan desde el panel:
+- **Node.js**: Habilitar extensión de Node.js en Plesk.
+- **PostgreSQL**: Asegurar que PostGIS esté disponible.
+- **SSL (Let's Encrypt)**: Instalar certificado gratuito para que la API use `https`.
 
 ### Extensiones de Base de Datos
-La base de datos requiere extensiones específicas. Asegúrate de instalarlas en tu servidor Postgres:
+Indispensable para el mapa de reportes:
 ```bash
-sudo apt install postgresql-xx-postgis  # Reemplaza xx con tu versión (ej. 16)
+sudo apt install postgresql-xx-postgis  # Versión 14, 15 o 16 según tu sistema
 ```
 
-## 2. Preparación del Proyecto
+---
 
-1. **Clonar el repositorio**:
-   ```bash
-   git clone <url-de-tu-repo>
-   cd SistemaMunicipalTancitaro
+## 2. Despliegue del Backend (API)
+
+1. **Configurar Dominio en Plesk**: Crea un subdominio (ej: `api.tancitaro.gob.mx`).
+2. **Subir archivos**: Sube la carpeta `backend` (puedes usar Git o FTP).
+3. **Variables de Entorno (.env)**: Crea el archivo en el servidor con datos reales:
+   ```env
+   NODE_ENV=production
+   PORT=3000
+   DB_USER=usuario_plesk
+   DB_PASSWORD=tu_password_seguro
+   DB_NAME=tancitaro_db
+   JWT_SECRET=un_codigo_muy_largo_y_aleatorio
    ```
-
-2. **Configuración del Backend**:
+4. **Instalar y Correr**:
    ```bash
-   cd backend
-   cp .env.example .env
-   nano .env  # Edita las variables con tus datos reales (DB_PASSWORD, etc.)
    npm install
+   # En Plesk, simplemente asegúrate de que el 'Application Startup File' sea server.js
    ```
 
-3. **Inicialización de Base de Datos**:
-   Asegúrate que la base de datos `tancitaro_db` (o el nombre que hayas puesto en .env) exista.
-   ```bash
-   # Crear base de datos si no existe
-   createdb -U postgres tancitaro_db
-   
-   # Ejecutar script de inicialización (crea tablas y admin)
-   npm run db:create
+---
+
+## 3. Despliegue de la App Web (Admin/Frontend)
+
+React se despliega como archivos estáticos:
+1. **Configurar URL de API**: En tu PC, edita `frontend/.env`:
+   `REACT_APP_API_URL=https://api.tu-dominio.com/api`
+2. **Generar el Build**: 
+   `npm run build` (dentro de la carpeta frontend).
+3. **Subir carpeta `build`**: Copia el contenido de la carpeta resultante a la ruta `httpdocs` de tu dominio en Plesk.
+4. **Regla de Redirección**: Para que las rutas de React funcionen (evitar error 404 al recargar), crea un archivo `.htaccess` en Plesk con:
+   ```apache
+   Options -MultiViews
+   RewriteEngine On
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^ index.html [L]
    ```
 
-4. **Configuración del Frontend**:
-   ```bash
-   cd ../frontend
-   cp .env.example .env
-   nano .env
-   # Asegúrate de poner REACT_APP_API_URL=https://tu-dominio.com/api (o la IP del VPS)
-   npm install
-   npm run build
-   ```
-   Esto generará una carpeta `build` con los archivos estáticos.
+---
 
-## 3. Puesta en Marcha
+## 4. Construcción y Despliegue de la App Móvil (Flutter)
 
-### Opción A: Usando PM2 para el Backend
+La app móvil se debe "apuntar" a tu nuevo servidor y luego generar el instalador (.apk).
+
+### Paso A: Cambiar a Producción
+1. Abre el archivo `tancitaro/.env` en tu computadora.
+2. Modifica la URL para que use tu dominio real con **HTTPS**:
+   `API_URL=https://api.tu-dominio.com/api`
+
+### Paso B: Generar el instalador (APK) para Android
+En la terminal, dentro de la carpeta `tancitaro`, ejecuta:
 ```bash
-cd ../backend
-pm2 start server.js --name "tancitaro-backend"
-pm2 save
-pm2 startup
+flutter build apk --release
 ```
+Este comando generará un archivo llamado `app-release.apk` en:
+`build/app/outputs/flutter-apk/`
 
-### Opción B: Servir Frontend (Recomendado: Nginx)
-Instala Nginx y configuralo como proxy inverso.
-1. `sudo apt install nginx`
-2. Configura un archivo en `/etc/nginx/sites-available/tancitaro`:
-   ```nginx
-   server {
-       listen 80;
-       server_name tu-dominio.com;
+### Paso C: ¿Cómo distribuirla?
+1. **Descarga Directa**: Sube el archivo `.apk` a tu VPS (ej: `https://tu-dominio.com/descarga/app.apk`) y comparte el enlace.
+2. **Play Store**: Requiere una cuenta de desarrollador de Google ($25 USD pago único) y seguir el proceso de publicación oficial.
 
-       # Frontend (Archivos estáticos)
-       location / {
-           root /ruta/al/proyecto/frontend/build;
-           index index.html index.htm;
-           try_files $uri $uri/ /index.html;
-       }
+---
 
-       # Backend (API)
-       location /api {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-3. Activa el sitio: `sudo ln -s /etc/nginx/sites-available/tancitaro /etc/nginx/sites-enabled/`
-4. Reinicia Nginx: `sudo systemctl restart nginx`
+## 5. Gestión y Actualizaciones Post-Despliegue
 
-## 4. Gestión de Base de Datos (Backup y Restauración)
+### ¿Cómo aplicar cambios?
+- **Backend**: Sube el archivo modificado y reinicia la aplicación desde el panel de Plesk.
+- **Web**: Ejecuta `npm run build` en tu PC y sube de nuevo la carpeta `build`.
+- **Móvil**: Si cambias algo de la interfaz, debes generar un nuevo APK y pedir a los usuarios que instalen la versión actualizada.
 
-Si tienes un archivo de respaldo (backup) de tu base de datos local (ej. `respaldo.sql`), sigue estos pasos para subirlo y restaurarlo:
-
-### 1. Subir el archivo al VPS
-Desde tu computadora local (Windows), usa `scp` en la terminal (PowerShell/CMD) o un programa como **WinSCP** o **FileZilla**.
-
-**Comando SCP:**
-```powershell
-# Reemplaza 'usuario' e 'ip-del-vps' con tus datos reales
-scp ruta\a\tu\respaldo.sql usuario@ip-del-vps:/home/usuario/
-```
-
-### 2. Restaurar en el VPS
-Una vez conectado al VPS por SSH:
-
-```bash
-# Si database ya existe y quieres limpiarla primero (OPCIONAL):
-# dropdb -U postgres tancitaro_db
-# createdb -U postgres tancitaro_db
-
-# Restaurar el archivo .sql
-psql -U postgres -d tancitaro_db -f /home/usuario/respaldo.sql
-```
-*Si tienes errores de permisos con el usuario postgres, prueba usando `sudo -u postgres psql ...`*
-
-## 5. Verificación
-- Visita `http://tu-dominio.com` para ver la aplicación.
-- Intenta iniciar sesión con el usuario admin por defecto (ver `backend/utils/database.js` o logs de inicialización).
+### Recomendación de Seguridad
+> [!IMPORTANT]
+> Nunca compartas el archivo `.env` en repositorios públicos. Asegúrate de que `node_modules` y carpetas de `build` estén en tu `.gitignore`.

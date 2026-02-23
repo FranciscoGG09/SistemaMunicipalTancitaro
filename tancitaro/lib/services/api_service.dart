@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/report.dart';
 import '../models/news.dart';
 import '../models/user.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.18.75:3000';
+  String get baseUrl =>
+      dotenv.env['API_URL'] ?? 'http://192.168.101.11:3000/api';
   final SharedPreferences prefs;
 
   ApiService(this.prefs);
@@ -31,15 +33,20 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         await prefs.setString('auth_token', data['token']);
-        await prefs.setString('user_id', data['user']['id']);
+        // The backend returns 'usuario', not 'user'
+        final usuario = data['usuario'] ?? data['user'];
+        if (usuario != null && usuario['id'] != null) {
+          await prefs.setString('user_id', usuario['id']);
+        }
         return {'success': true};
       }
 
       final body = json.decode(response.body);
       return {
         'success': false,
-        'message':
-            body['message'] ?? 'Error ${response.statusCode}: ${response.body}'
+        'message': body['message'] ??
+            body['error'] ??
+            'Error ${response.statusCode}: ${response.body}'
       };
     } catch (e) {
       return {'success': false, 'message': 'Error de conexión: $e'};
@@ -49,11 +56,12 @@ class ApiService {
   Future<Map<String, dynamic>> register(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/register'),
+        Uri.parse('$baseUrl/auth/registrar-publico'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': email,
           'password': password,
+          'nombre': email.split('@')[0], // Añadir campo nombre por defecto
         }),
       );
 
@@ -64,8 +72,9 @@ class ApiService {
       final body = json.decode(response.body);
       return {
         'success': false,
-        'message':
-            body['message'] ?? 'Error ${response.statusCode}: ${response.body}'
+        'message': body['message'] ??
+            body['error'] ??
+            'Error ${response.statusCode}: ${response.body}'
       };
     } catch (e) {
       return {'success': false, 'message': 'Error de conexión: $e'};
@@ -78,7 +87,7 @@ class ApiService {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/news'),
+        Uri.parse('$baseUrl/noticias'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -102,28 +111,32 @@ class ApiService {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/reports'),
+        Uri.parse('$baseUrl/reportes'),
       )..headers['Authorization'] = 'Bearer $token';
 
       // Agregar campos del reporte
-      request.fields['title'] = report.title;
-      request.fields['description'] = report.description;
-      request.fields['category'] = report.category;
-      request.fields['latitude'] = report.latitude.toString();
-      request.fields['longitude'] = report.longitude.toString();
-      request.fields['status'] = report.status;
+      request.fields['titulo'] = report.title;
+      request.fields['descripcion'] = report.description;
+      request.fields['categoria'] = report.category;
+      request.fields['latitud'] = report.latitude.toString();
+      request.fields['longitud'] = report.longitude.toString();
+
+      // Backend espera status?
+      if (report.status.isNotEmpty) {
+        request.fields['status'] = report.status;
+      }
 
       // Agregar imagen
       request.files.add(
         await http.MultipartFile.fromPath(
-          'image',
+          'fotos',
           image.path,
           filename: '${report.id}.jpg',
         ),
       );
 
       final response = await request.send();
-      return response.statusCode == 201;
+      return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
       print('Submit report error: $e');
       return false;
@@ -133,11 +146,10 @@ class ApiService {
   // Perfil de usuario
   Future<User?> getUserProfile() async {
     final token = await _getToken();
-    final userId = prefs.getString('user_id');
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/users/$userId'),
+        Uri.parse('$baseUrl/auth/perfil'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -145,7 +157,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return User.fromJson(data);
+        return User.fromJson(data['usuario'] ?? data);
       }
       return null;
     } catch (e) {
@@ -161,17 +173,17 @@ class ApiService {
   }) async {
     final token = await _getToken();
     final userId = prefs.getString('user_id');
+    if (userId == null) return false;
 
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/users/$userId'),
+        Uri.parse('$baseUrl/auth/usuarios/$userId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'firstName': firstName,
-          'lastName': lastName,
+          'nombre': '$firstName $lastName',
           'email': email,
         }),
       );
@@ -191,22 +203,19 @@ class ApiService {
   // Obtener reportes del usuario
   Future<List<Report>> getUserReports() async {
     final token = await _getToken();
-    final userId = prefs.getString('user_id');
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/users/$userId/reports'),
+        Uri.parse('$baseUrl/reportes'),
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        // Mapping API response to Report objects
-        // Assuming API returns data compatible with Report.fromMap/fromJson
-        // We might need to adjust if API field names differ from local DB
-        return data.map((item) => Report.fromMap(item)).toList();
+        final dynamic data = json.decode(response.body);
+        final List<dynamic> reportes = data['reportes'] ?? data;
+        return reportes.map((item) => Report.fromMap(item)).toList();
       }
       return [];
     } catch (e) {
@@ -217,10 +226,6 @@ class ApiService {
 
   // Sincronización offline
   Future<bool> syncOfflineReports(List<Report> reports) async {
-    // Token is retrieved inside submitReport, so we don't strictly need it here
-    // unless we want to validate it before looping.
-    // final token = await _getToken(); // Removed unused variable
-
     try {
       for (var report in reports) {
         final image = File(report.imagePath);

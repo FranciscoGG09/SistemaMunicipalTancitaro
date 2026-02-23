@@ -33,10 +33,14 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Mis Reportes'),
-        backgroundColor: const Color(0xFF0066CC),
-        foregroundColor: Colors.white,
+        title: const Text('Mis Reportes',
+            style:
+                TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
       ),
       body: FutureBuilder<List<Report>>(
         // Usamos el future inicializado en initState
@@ -50,13 +54,20 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const Icon(Icons.error_outline,
+                      size: 64, color: Colors.redAccent),
                   const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
+                  Text('Error: ${snapshot.error}',
+                      style: TextStyle(color: Colors.grey.shade700)),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: () => setState(() {}),
-                    child: const Text('Reintentar'),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ],
               ),
@@ -68,7 +79,7 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.assignment_outlined,
-                      size: 64, color: Colors.grey[400]),
+                      size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 16),
                   Text(
                     'No has realizado reportes aún.',
@@ -81,17 +92,18 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
 
           final reports = snapshot.data!;
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             itemCount: reports.length,
             itemBuilder: (context, index) {
               final report = reports[index];
               return Card(
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 12),
+                elevation: 3,
+                shadowColor: Colors.black12,
+                margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -102,8 +114,9 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
                             child: Text(
                               report.title,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -112,29 +125,54 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
                           _buildStatusChip(report.status),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         report.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(
+                            color: Colors.grey[700], fontSize: 14, height: 1.4),
                       ),
+                      const SizedBox(height: 16),
+                      Divider(color: Colors.grey.shade200, height: 1),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            DateFormat('dd/MM/yyyy HH:mm')
-                                .format(report.createdAt),
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[500]),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time,
+                                  size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                DateFormat('dd/MM/yyyy HH:mm')
+                                    .format(report.createdAt),
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[600]),
+                              ),
+                            ],
                           ),
-                          Text(
-                            report.category,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.blue[700],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.category,
+                                    size: 12, color: Colors.blue.shade700),
+                                const SizedBox(width: 4),
+                                Text(
+                                  report.category,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue[700],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -172,7 +210,7 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
         break;
       case 'rejected':
       case 'rechazado':
-        color = Colors.red;
+        color = Colors.redAccent;
         label = 'Rechazado';
         break;
       default:
@@ -181,11 +219,11 @@ class _ReportStatusScreenState extends State<ReportStatusScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         label,

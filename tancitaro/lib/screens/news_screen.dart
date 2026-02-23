@@ -32,16 +32,27 @@ class _NewsScreenState extends State<NewsScreen> {
         _hasError = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text('Noticias',
+            style:
+                TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _hasError
@@ -49,14 +60,21 @@ class _NewsScreenState extends State<NewsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 64, color: Colors.red),
-                      const SizedBox(height: 20),
-                      const Text('Error al cargar noticias'),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
+                      const Icon(Icons.wifi_off,
+                          size: 64, color: Colors.redAccent),
+                      const SizedBox(height: 16),
+                      Text('Error al cargar noticias',
+                          style: TextStyle(
+                              color: Colors.grey.shade700, fontSize: 16)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
                         onPressed: _loadNews,
-                        child: const Text('Reintentar'),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
                       ),
                     ],
                   ),
@@ -64,14 +82,24 @@ class _NewsScreenState extends State<NewsScreen> {
               : RefreshIndicator(
                   onRefresh: _loadNews,
                   child: _news.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No hay noticias disponibles',
-                            style: TextStyle(fontSize: 18),
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.newspaper,
+                                  size: 80, color: Colors.grey.shade300),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No hay noticias disponibles',
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.grey.shade600),
+                              ),
+                            ],
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 16),
                           itemCount: _news.length,
                           itemBuilder: (context, index) {
                             return _buildNewsCard(_news[index]);
@@ -83,68 +111,109 @@ class _NewsScreenState extends State<NewsScreen> {
 
   Widget _buildNewsCard(News news) {
     return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 5),
-                Text(
-                  news.formattedDate,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              news.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      elevation: 4,
+      shadowColor: Colors.black12,
+      margin: const EdgeInsets.only(bottom: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Imagen
+          if (news.imageUrl != null)
+            Image.network(
+              news.imageUrl!,
+              height: 220,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 220,
+                width: double.infinity,
+                color: Colors.grey.shade200,
+                child: const Icon(Icons.image_not_supported,
+                    size: 50, color: Colors.grey),
               ),
             ),
-            const SizedBox(height: 10),
-            if (news.imageUrl != null)
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: DecorationImage(
-                    image: NetworkImage(news.imageUrl!),
-                    fit: BoxFit.cover,
+
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Categoría/Fecha
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Noticia',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700),
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.calendar_today,
+                        size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      news.formattedDate,
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Título
+                Text(
+                  news.title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
-                margin: const EdgeInsets.only(bottom: 10),
-              ),
-            Text(
-              news.content,
-              style: const TextStyle(fontSize: 16, height: 1.5),
+                const SizedBox(height: 8),
+
+                // Contenido
+                Text(
+                  news.content,
+                  style: TextStyle(
+                      fontSize: 15, height: 1.5, color: Colors.grey.shade800),
+                ),
+
+                // Adjuntos
+                if (news.attachments.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade200),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: news.attachments
+                        .map((attachment) => Chip(
+                              avatar: const Icon(Icons.attach_file,
+                                  size: 16, color: Colors.blue),
+                              label: Text(attachment,
+                                  style: const TextStyle(fontSize: 12)),
+                              backgroundColor: Colors.blue.shade50,
+                              side: BorderSide.none,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ))
+                        .toList(),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 10),
-            if (news.attachments.isNotEmpty) ...[
-              const Divider(),
-              const Text(
-                'Archivos adjuntos:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Wrap(
-                spacing: 8,
-                children: news.attachments
-                    .map((attachment) => Chip(
-                          label: Text(attachment),
-                          backgroundColor: Colors.blue[50],
-                        ))
-                    .toList(),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

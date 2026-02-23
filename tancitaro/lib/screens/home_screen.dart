@@ -36,11 +36,18 @@ class _NewsScreenState extends State<NewsScreen> {
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
           itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
             final noticia = snapshot.data![index];
             return Card(
-              margin: const EdgeInsets.all(8.0),
+              margin: const EdgeInsets.only(bottom: 16.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              elevation: 4,
+              shadowColor: Colors.black26,
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -53,11 +60,13 @@ class _NewsScreenState extends State<NewsScreen> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                           height: 200,
-                          color: Colors.grey,
-                          child: const Icon(Icons.broken_image)),
+                          width: double.infinity,
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.image_not_supported,
+                              size: 50, color: Colors.grey)),
                     ),
                   Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -71,14 +80,22 @@ class _NewsScreenState extends State<NewsScreen> {
                           noticia['contenido'] ?? '',
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Colors.grey.shade800),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          DateFormat('dd/MM/yyyy').format(DateTime.parse(
-                              noticia['publicado_en'] ??
-                                  DateTime.now().toIso8601String())),
-                          style:
-                              const TextStyle(color: Colors.grey, fontSize: 12),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time,
+                                size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd/MM/yyyy').format(DateTime.parse(
+                                  noticia['publicado_en'] ??
+                                      DateTime.now().toIso8601String())),
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 13),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -130,41 +147,80 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
 
     if (_onlineReports.isEmpty && _offlineReports.isEmpty) {
-      return const Center(child: Text('No tienes reportes creados'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox, size: 80, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text('No tienes reportes creados',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+          ],
+        ),
+      );
     }
 
     return ListView(
+      padding: const EdgeInsets.all(16.0),
       children: [
         if (_offlineReports.isNotEmpty) ...[
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text('Pendientes de sincronizar',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.orange)),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.orange)),
           ),
-          ..._offlineReports.map((reporte) => ListTile(
-                leading: const Icon(Icons.sync_problem, color: Colors.orange),
-                title: Text(reporte['titulo']),
-                subtitle: Text(reporte['fecha'] ?? ''),
-                trailing: const Text('Offline'),
+          ..._offlineReports.map((reporte) => Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 8.0),
+                elevation: 2,
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.orangeAccent,
+                    child: Icon(Icons.sync_problem, color: Colors.white),
+                  ),
+                  title: Text(reporte['titulo'],
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(reporte['fecha'] ?? ''),
+                  trailing: const Chip(
+                    label: Text('Offline', style: TextStyle(fontSize: 12)),
+                    backgroundColor: Colors.orange,
+                    labelStyle: TextStyle(color: Colors.white),
+                  ),
+                ),
               )),
-          const Divider(),
+          const SizedBox(height: 16),
         ],
         if (_onlineReports.isNotEmpty) ...[
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text('Enviados',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.blue)),
           ),
-          ..._onlineReports.map((reporte) => ListTile(
-                leading: const Icon(Icons.check_circle, color: Colors.green),
-                title: Text(reporte['titulo']),
-                subtitle: Text(reporte['estado']),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // Ver detalles
-                },
+          ..._onlineReports.map((reporte) => Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 8.0),
+                elevation: 2,
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blueAccent,
+                    child: Icon(Icons.check, color: Colors.white),
+                  ),
+                  title: Text(reporte['titulo'],
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(reporte['estado']),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  onTap: () {
+                    // Ver detalles
+                  },
+                ),
               )),
         ]
       ],
@@ -205,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static final List<Widget> _widgetOptions = <Widget>[
-    NewsScreen(),
-    MyReportsScreen(),
+    const NewsScreen(),
+    const MyReportsScreen(),
     const ProfileScreen(),
   ];
 
@@ -221,50 +277,75 @@ class _HomeScreenState extends State<HomeScreen> {
     await authService.logout();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Tancítaro Digital'),
+        title: const Text('Tancítaro Digital',
+            style:
+                TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black87),
+            onPressed: _logout,
+            tooltip: 'Cerrar sesión',
+          ),
         ],
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       floatingActionButton: _selectedIndex == 1
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CreateReportScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const CreateReportScreen()),
                 );
               },
-              tooltip: 'Crear Reporte',
-              child: Icon(Icons.add_a_photo),
+              backgroundColor: Colors.blue.shade700,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text('Crear Reporte',
+                  style: TextStyle(color: Colors.white)),
             )
           : null,
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.article),
-            label: 'Noticias',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.report_problem),
-            label: 'Reportes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue[800],
-        onTap: _onItemTapped,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 1)
+        ]),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.article_outlined),
+              activeIcon: Icon(Icons.article),
+              label: 'Noticias',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.report_problem_outlined),
+              activeIcon: Icon(Icons.report_problem),
+              label: 'Reportes',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Perfil',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.blue.shade700,
+          unselectedItemColor: Colors.grey.shade500,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
     );
   }

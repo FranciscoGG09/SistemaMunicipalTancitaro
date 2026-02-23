@@ -36,9 +36,9 @@ class MyApp extends StatelessWidget {
           }
           // If has token, go to Home, else Login
           if (snapshot.hasData && snapshot.data != null) {
-            return HomeScreen();
+            return const HomeScreen();
           } else {
-            return LoginScreen();
+            return const LoginScreen();
           }
         },
       ),

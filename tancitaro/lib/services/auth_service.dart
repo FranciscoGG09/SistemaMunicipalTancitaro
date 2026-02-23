@@ -7,7 +7,7 @@ import '../models/user.dart';
 
 class AuthService with ChangeNotifier {
   String get baseUrl =>
-      '${dotenv.env['API_URL'] ?? 'http://10.0.2.2:5000'}/api/auth';
+      '${dotenv.env['API_URL'] ?? 'http://192.168.101.11:3000/api'}/auth';
 
   User? _currentUser;
   User? get currentUser => _currentUser;

@@ -152,8 +152,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_getAppBarTitle()),
+        title: Text(_getAppBarTitle(),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: _isLoading
           ? const Center(
@@ -162,11 +168,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Obteniendo ubicación...'),
+                  Text('Procesando...', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             )
-          : _buildCurrentStep(),
+          : SafeArea(child: _buildCurrentStep()),
     );
   }
 
@@ -175,9 +181,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       case 0:
         return 'Nuevo Reporte';
       case 1:
-        return 'Información del Reporte';
+        return 'Detalles del Problema';
       case 2:
-        return 'Previsualización';
+        return 'Resumen';
       default:
         return 'Nuevo Reporte';
     }
@@ -197,39 +203,67 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// Paso 1: Formulario para llenar información
   Widget _buildFormulario() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Mostrar foto tomada
           if (_image != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                _image!,
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
+            Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4))
+                  ]),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(
+                  _image!,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           if (_position != null)
-            Text(
-              '📍 Ubicación capturada: ${_position!.latitude.toStringAsFixed(5)}, ${_position!.longitude.toStringAsFixed(5)}',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.location_on,
+                    size: 16, color: Colors.redAccent),
+                const SizedBox(width: 4),
+                Text(
+                  '${_position!.latitude.toStringAsFixed(5)}, ${_position!.longitude.toStringAsFixed(5)}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                ),
+              ],
             ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           TextField(
             controller: _tituloController,
-            decoration: const InputDecoration(labelText: 'Título del Problema'),
+            decoration: InputDecoration(
+              labelText: 'Título del Problema',
+              hintText: 'Ej. Bache profundo en calle',
+              prefixIcon: const Icon(Icons.title),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           TextField(
             controller: _descripcionController,
-            decoration:
-                const InputDecoration(labelText: 'Descripción detallada'),
-            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Descripción detallada',
+              hintText: 'Explica el problema con más detalle...',
+              alignLabelWithHint: true,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            maxLines: 4,
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
@@ -245,16 +279,24 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 _categoriaSeleccionada = newValue!;
               });
             },
-            decoration:
-                const InputDecoration(labelText: 'Dirección / Categoría'),
+            decoration: InputDecoration(
+              labelText: 'Categoría',
+              prefixIcon: const Icon(Icons.category),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           ),
-          const SizedBox(height: 30),
-          ElevatedButton.icon(
-            onPressed: _irAPrevisualizar,
-            icon: const Icon(Icons.preview),
-            label: const Text('Aceptar y Previsualizar'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 15),
+          const SizedBox(height: 32),
+          SizedBox(
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: _irAPrevisualizar,
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Continuar', style: TextStyle(fontSize: 16)),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ),
         ],
@@ -265,79 +307,99 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// Paso 2: Previsualización de toda la información antes de enviar
   Widget _buildPreview() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Revisa la información antes de enviar:',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Text(
+            'Revisa tu reporte antes de enviarlo',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey.shade800),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // Foto
           if (_image != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               child: Image.file(
                 _image!,
-                height: 200,
+                height: 220,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // Info
           Card(
-            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 3,
+            shadowColor: Colors.black26,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow('Título', _tituloController.text),
-                  const Divider(),
+                  _buildInfoRow(Icons.title, 'Título', _tituloController.text),
+                  const Divider(height: 24),
                   _buildInfoRow(
+                      Icons.description,
                       'Descripción',
                       _descripcionController.text.isEmpty
                           ? 'Sin descripción'
                           : _descripcionController.text),
-                  const Divider(),
-                  _buildInfoRow('Categoría', _categoriaSeleccionada),
-                  const Divider(),
-                  _buildInfoRow('Ubicación',
+                  const Divider(height: 24),
+                  _buildInfoRow(
+                      Icons.category, 'Categoría', _categoriaSeleccionada),
+                  const Divider(height: 24),
+                  _buildInfoRow(Icons.location_on, 'Ubicación',
                       '${_position?.latitude.toStringAsFixed(5)}, ${_position?.longitude.toStringAsFixed(5)}'),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
           // Botones
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _regresarAFormulario,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Editar'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
+                flex: 1,
+                child: SizedBox(
+                  height: 54,
+                  child: OutlinedButton.icon(
+                    onPressed: _regresarAFormulario,
+                    icon: const Icon(Icons.edit, size: 20),
+                    label: const Text('Editar'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _enviarReporte,
-                  icon: const Icon(Icons.send),
-                  label: const Text('Enviar Reporte'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
+                flex: 2,
+                child: SizedBox(
+                  height: 54,
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _enviarReporte,
+                    icon: const Icon(Icons.send, size: 20),
+                    label: const Text('Enviar Reporte',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ),
               ),
@@ -348,25 +410,30 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.blueGrey),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                    fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+              Text(value,
+                  style: const TextStyle(fontSize: 15, color: Colors.black87)),
+            ],
           ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+dist/
+build/
+.pub-cache/
+.dart_tool/
+
+# Variables de entorno (Sensible!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env
+tancitaro/.env
+
+# Archivos de Sistema y Editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Flutter/Android/iOS específicos
+*.apk
+*.aab
+*.exe
+tancitaro/build/
+tancitaro/.flutter-plugins
+tancitaro/.flutter-plugins-dependencies
+tancitaro/android/app/key.properties
+
+# Archivos temporales de despliegue
+backend/backend_prod.zip
