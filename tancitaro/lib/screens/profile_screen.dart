@@ -154,12 +154,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.bold,
                           color: Colors.black87),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      user?.phone ?? '',
-                      style:
-                          TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                    ),
                     const SizedBox(height: 4),
                     if (user?.email != null)
                       Text(
@@ -290,19 +284,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Teléfono (no editable)
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: InputDecoration(
-                          labelText: 'Teléfono',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.phone_outlined),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                        ),
-                        readOnly: true,
-                      ),
                       const SizedBox(height: 16),
 
                       // Correo electrónico
@@ -420,7 +401,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Debes completar todos los campos del perfil (nombre, apellidos, teléfono, correo) para poder subir reportes. Solo podrás ver noticias si tu perfil está incompleto.',
+                      'Debes completar todos los campos del perfil (nombre, apellidos, correo) para poder subir reportes. Solo podrás ver noticias si tu perfil está incompleto.',
                       style:
                           TextStyle(height: 1.5, color: Colors.blue.shade900),
                     ),

@@ -15,6 +15,14 @@ const crearReporte = async (req, res) => {
       });
     }
 
+    // Convertir coordenadas a números
+    const lat = parseFloat(latitud);
+    const lng = parseFloat(longitud);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      console.warn('Coordenadas no válidas recibidas:', { latitud, longitud });
+    }
+
     // Procesar imágenes si existen
     let fotosUrls = [];
     if (req.files && req.files.length > 0) {
@@ -31,8 +39,8 @@ const crearReporte = async (req, res) => {
       titulo,
       descripcion,
       categoria,
-      longitud,
-      latitud,
+      longitud: isNaN(lng) ? 0 : lng,
+      latitud: isNaN(lat) ? 0 : lat,
       fotos: fotosUrls,
       dispositivo_origen: dispositivo_origen || 'web'
     };
@@ -45,9 +53,10 @@ const crearReporte = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creando reporte:', error);
+    console.error('❌ Error detallado creando reporte:', error);
     res.status(500).json({
-      error: 'Error interno del servidor al crear reporte'
+      error: 'Error interno del servidor al crear reporte',
+      detalles: error.message
     });
   }
 };

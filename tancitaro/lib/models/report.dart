@@ -51,14 +51,18 @@ class Report {
       title: map['title'],
       description: map['description'],
       category: map['category'],
-      latitude: map['latitude'],
-      longitude: map['longitude'],
-      imagePath: map['imagePath'],
-      status: map['status'],
-      createdAt: DateTime.parse(map['createdAt']),
+      latitude: (map['latitude'] ?? map['latitud'])?.toDouble() ?? 0.0,
+      longitude: (map['longitude'] ?? map['longitud'])?.toDouble() ?? 0.0,
+      imagePath: map['imagePath'] ?? '',
+      status: map['status'] ?? 'pending',
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
+          : (map['creado_en'] != null
+              ? DateTime.parse(map['creado_en'])
+              : DateTime.now()),
       syncedAt:
           map['syncedAt'] != null ? DateTime.parse(map['syncedAt']) : null,
-      isSynced: map['isSynced'] == 1,
+      isSynced: map['isSynced'] == 1 || map['isSynced'] == true,
     );
   }
 

@@ -9,8 +9,8 @@ class Reporte {
     } = reporteData;
 
     const sql = `
-      INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, ubicacion, fotos, dispositivo_origen, historial_estados)
-      VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9, $10)
+      INSERT INTO reporte (id, usuario_id, titulo, descripcion, categoria, latitud, longitud, fotos, dispositivo_origen, historial_estados)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
 
@@ -23,7 +23,7 @@ class Reporte {
 
     const result = await query(sql, [
       id, usuario_id, titulo, descripcion, categoria,
-      longitud, latitud, JSON.stringify(fotos || []), dispositivo_origen,
+      latitud, longitud, JSON.stringify(fotos || []), dispositivo_origen,
       historialInicial
     ]);
 
@@ -66,7 +66,7 @@ class Reporte {
 
     // Consulta principal con paginación
     const sql = `
-      SELECT r.*, ST_Y(r.ubicacion) as latitud, ST_X(r.ubicacion) as longitud, u.nombre as usuario_nombre, u.email as usuario_email
+      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
       FROM reporte r
       LEFT JOIN usuario u ON r.usuario_id = u.id
       ${whereClause}
@@ -84,7 +84,7 @@ class Reporte {
   // Obtener reporte por ID
   async obtenerPorId(id) {
     const sql = `
-      SELECT r.*, ST_Y(r.ubicacion) as latitud, ST_X(r.ubicacion) as longitud, u.nombre as usuario_nombre, u.email as usuario_email
+      SELECT r.*, u.nombre as usuario_nombre, u.email as usuario_email
       FROM reporte r
       LEFT JOIN usuario u ON r.usuario_id = u.id
       WHERE r.id = $1

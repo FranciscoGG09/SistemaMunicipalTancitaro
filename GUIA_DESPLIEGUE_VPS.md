@@ -2,6 +2,33 @@
 
 Esta guía detalla los pasos para desplegar el proyecto en un servidor VPS (Ubuntu/Plesk recomendado).
 
+---
+
+## 0. Configuración de DNS en IONOS (Paso Crítico)
+
+Para que el servidor responda en tus subdominios, debes configurarlos en tu panel de **IONOS**:
+
+1. **Inicia sesión** en tu cuenta de [IONOS](https://login.ionos.es/).
+2. Ve a la sección **"Dominios y SSL"**.
+3. Haz clic en el nombre de tu dominio principal (`ayuntamientotancitaro.gob.mx`).
+4. Selecciona la pestaña **"DNS"**.
+5. Haz clic en **"Añadir registro"** y selecciona el tipo **"A"**.
+6. **Configura el Subdominio API:**
+   - **Nombre de host:** `api`
+   - **Apunta a (IP):** `66.179.210.158`
+   - **TTL:** (Déjalo por defecto).
+   - Dale a **Guardar**.
+7. **Configura el Subdominio para reportes:**
+   - Haz clic de nuevo en **"Añadir registro"** (Tipo **A**).
+   - **Nombre de host:** `reportes`
+   - **Apunta a (IP):** `66.179.210.158`
+   - Dale a **Guardar**.
+
+> [!NOTE]
+> Una vez guardado, los DNS pueden tardar desde 15 minutos hasta unas horas en activarse.
+
+---
+
 ## 1. Prerrequisitos del Servidor (VPS / Plesk)
 Si usas **Plesk**, la mayoría de estos se instalan desde el panel:
 - **Node.js**: Habilitar extensión de Node.js en Plesk.
@@ -79,7 +106,30 @@ Este comando generará un archivo llamado `app-release.apk` en:
 
 ---
 
-## 5. Gestión y Actualizaciones Post-Despliegue
+---
+
+## 5. Migración de Datos (Local a Producción)
+
+Si quieres que los usuarios y reportes que ya tienes en tu computadora aparezcan en el servidor, debes "clonar" la base de datos.
+
+### Paso 1: Exportar desde tu PC (Local)
+1. Abre una terminal (CMD o PowerShell) en tu computadora.
+2. Ejecuta el siguiente comando para generar un archivo con toda tu información:
+   ```bash
+   pg_dump -U postgres -d tancitaro_db > respaldo_tancitaro.sql
+   ```
+   *(Te pedirá la contraseña de tu Postgres local).*
+
+### Paso 2: Importar en Plesk
+1. Entra a tu panel de **Plesk** y ve a la sección **"Bases de datos"**.
+2. Busca tu base de datos `tancitaro_db`.
+3. Busca una opción que dice **"Importar volcado"** (o "Import Dump").
+4. Selecciona el archivo `respaldo_tancitaro.sql` que acabas de crear en tu PC.
+5. Dale a **Aceptar**. Plesk procesará el archivo y ¡listo! Todos tus usuarios aparecerán en la web de producción.
+
+---
+
+## 6. Gestión y Actualizaciones Post-Despliegue
 
 ### ¿Cómo aplicar cambios?
 - **Backend**: Sube el archivo modificado y reinicia la aplicación desde el panel de Plesk.

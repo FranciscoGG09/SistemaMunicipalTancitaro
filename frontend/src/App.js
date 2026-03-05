@@ -10,14 +10,28 @@ import Profile from './pages/Profile';
 import PrivateRoute from './components/auth/PrivateRoute';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
-import { Box, CssBaseline } from '@mui/material';
+import { Box, CssBaseline, CircularProgress, Typography } from '@mui/material';
 import './App.css';
 
 function AppContent() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return null; // El loading se maneja en PrivateRoute
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+        backgroundColor="#f8fafc"
+      >
+        <CircularProgress size={60} color="primary" />
+        <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
+          Iniciando sistema...
+        </Typography>
+      </Box>
+    );
   }
 
   return (

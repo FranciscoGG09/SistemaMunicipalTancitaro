@@ -6,8 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'database_helper.dart';
 
 class ReportService {
-  String get baseUrl =>
-      '${dotenv.env['API_URL'] ?? 'http://10.0.2.2:5000'}/api';
+  String get baseUrl => dotenv.env['API_URL'] ?? 'http://10.0.2.2:5000/api';
 
   // Enviar reporte (intenta online, si falla guarda offline)
   Future<Map<String, dynamic>> enviarReporte({
