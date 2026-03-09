@@ -20,8 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     final authService = Provider.of<AuthService>(context, listen: false);
     final result = await authService.login(
-      _emailController.text,
-      _passwordController.text,
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
     );
     setState(() => _isLoading = false);
 

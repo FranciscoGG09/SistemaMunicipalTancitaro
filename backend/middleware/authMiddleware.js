@@ -5,8 +5,11 @@ const Usuario = require('../models/usuario');
 const verificarToken = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
+    console.log('--- DEBUG AUTH ---');
+    console.log('Auth Header:', authHeader ? 'Presente' : 'Ausente');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Error: Token no proporcionado o formato incorrecto');
       return res.status(401).json({
         error: 'Acceso denegado. Token no proporcionado'
       });
@@ -16,15 +19,20 @@ const verificarToken = async (req, res, next) => {
 
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Token decodificado. ID Usuario:', decoded.id);
 
     // Buscar usuario en base de datos
     const usuario = await Usuario.buscarPorId(decoded.id);
 
     if (!usuario) {
+      console.log('Error: Usuario del token no existe en DB');
       return res.status(401).json({
         error: 'Token inválido. Usuario no existe'
       });
     }
+
+    console.log('Autenticación exitosa para:', usuario.email);
+    console.log('--- END DEBUG ---');
 
     // Agregar usuario al request
     req.usuario = usuario;

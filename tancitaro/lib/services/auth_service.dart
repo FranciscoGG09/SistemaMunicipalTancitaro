@@ -23,9 +23,9 @@ class AuthService with ChangeNotifier {
 
   Future<bool> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('user')) return false;
+    if (!prefs.containsKey('user_data')) return false;
 
-    final userStr = prefs.getString('user');
+    final userStr = prefs.getString('user_data');
     if (userStr != null) {
       try {
         final userData = jsonDecode(userStr);
@@ -51,11 +51,12 @@ class AuthService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
+        await prefs.setString('auth_token', data['token']);
 
         // Backend returns 'usuario' object.
         _currentUser = User.fromJson(data['usuario']);
-        await prefs.setString('user', jsonEncode(data['usuario']));
+        await prefs.setString('user_data', jsonEncode(data['usuario']));
+        await prefs.setString('user_id', _currentUser!.id);
 
         notifyListeners();
         return {'success': true, 'data': data};
@@ -81,10 +82,11 @@ class AuthService with ChangeNotifier {
 
       if (response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
+        await prefs.setString('auth_token', data['token']);
 
         _currentUser = User.fromJson(data['usuario']);
-        await prefs.setString('user', jsonEncode(data['usuario']));
+        await prefs.setString('user_data', jsonEncode(data['usuario']));
+        await prefs.setString('user_id', _currentUser!.id);
 
         notifyListeners();
         return {'success': true, 'data': data};
@@ -108,7 +110,7 @@ class AuthService with ChangeNotifier {
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    return prefs.getString('auth_token');
   }
 
   Future<bool> updateProfile({
@@ -133,7 +135,7 @@ class AuthService with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       // We should construct the backend-compatible JSON
       await prefs.setString(
-          'user',
+          'user_data',
           jsonEncode({
             'id': _currentUser!.id,
             'nombre': _currentUser!.fullName,

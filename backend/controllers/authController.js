@@ -117,7 +117,10 @@ const login = async (req, res) => {
 
     // Buscar usuario
     const usuario = await Usuario.buscarPorEmail(email);
+    console.log(`Intentando login para: ${email}`);
+
     if (!usuario) {
+      console.log('Usuario no encontrado');
       return res.status(401).json({
         error: 'Credenciales inválidas'
       });
@@ -125,6 +128,8 @@ const login = async (req, res) => {
 
     // Verificar contraseña
     const passwordValida = await Usuario.verificarPassword(password, usuario.password_hash);
+    console.log('¿Password válida?:', passwordValida);
+
     if (!passwordValida) {
       return res.status(401).json({
         error: 'Credenciales inválidas'

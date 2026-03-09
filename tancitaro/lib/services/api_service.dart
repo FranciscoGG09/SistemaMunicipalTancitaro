@@ -36,7 +36,7 @@ class ApiService {
         // The backend returns 'usuario', not 'user'
         final usuario = data['usuario'] ?? data['user'];
         if (usuario != null && usuario['id'] != null) {
-          await prefs.setString('user_id', usuario['id']);
+          await prefs.setString('user_id', usuario['id'].toString());
         }
         return {'success': true};
       }
