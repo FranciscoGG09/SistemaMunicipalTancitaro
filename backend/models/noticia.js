@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 
 class Noticia {
   // Crear nueva noticia
@@ -9,11 +9,10 @@ class Noticia {
 
     const sql = `
       INSERT INTO noticia (titulo, contenido, adjuntos, urls_externas, prioritaria, usuario_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    const result = await query(sql, [
+    const [result] = await pool.execute(sql, [
       titulo, contenido,
       JSON.stringify(adjuntos || []),
       JSON.stringify(urls_externas || []),
@@ -21,20 +20,18 @@ class Noticia {
       usuario_id
     ]);
 
-    return result.rows[0];
+    return this.obtenerPorId(result.insertId);
   }
 
   // Obtener todas las noticias con paginación
   async obtenerTodas(pagina = 1, limite = 10, filtros = {}) {
     let whereConditions = [];
     let valores = [];
-    let contador = 1;
 
     // Construir filtros dinámicos
     if (filtros.prioritaria !== undefined) {
-      whereConditions.push(`prioritaria = $${contador}`);
+      whereConditions.push('prioritaria = ?');
       valores.push(filtros.prioritaria);
-      contador++;
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
@@ -46,14 +43,14 @@ class Noticia {
       LEFT JOIN usuario u ON n.usuario_id = u.id
       ${whereClause}
       ORDER BY n.publicado_en DESC
-      LIMIT $${contador} OFFSET $${contador + 1}
+      LIMIT ? OFFSET ?
     `;
 
-    const offset = (pagina - 1) * limite;
-    valores.push(limite, offset);
+    const offset = (pagina - 1) * parseInt(limite);
+    valores.push(parseInt(limite), offset);
 
-    const result = await query(sql, valores);
-    return result.rows;
+    const { rows } = await query(sql, valores);
+    return rows;
   }
 
   // Obtener noticia por ID
@@ -62,11 +59,11 @@ class Noticia {
       SELECT n.*, u.nombre as usuario_nombre, u.email as usuario_email
       FROM noticia n
       LEFT JOIN usuario u ON n.usuario_id = u.id
-      WHERE n.id = $1
+      WHERE n.id = ?
     `;
 
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const { rows } = await query(sql, [id]);
+    return rows[0];
   }
 
   // Actualizar noticia
@@ -74,20 +71,18 @@ class Noticia {
     const camposPermitidos = ['titulo', 'contenido', 'adjuntos', 'urls_externas', 'prioritaria'];
     const campos = [];
     const valores = [];
-    let contador = 1;
 
     Object.keys(datosActualizados).forEach(key => {
       if (camposPermitidos.includes(key) && datosActualizados[key] !== undefined) {
         let valor = datosActualizados[key];
 
-        // Si es un campo JSONB (array), stringificarlo
+        // Si es un campo JSON (array), stringificarlo
         if (['adjuntos', 'urls_externas'].includes(key) && Array.isArray(valor)) {
           valor = JSON.stringify(valor);
         }
 
-        campos.push(`${key} = $${contador}`);
+        campos.push(`${key} = ?`);
         valores.push(valor);
-        contador++;
       }
     });
 
@@ -96,17 +91,17 @@ class Noticia {
     }
 
     valores.push(id);
-    const sql = `UPDATE noticia SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
+    const sql = `UPDATE noticia SET ${campos.join(', ')} WHERE id = ?`;
 
-    const result = await query(sql, valores);
-    return result.rows[0];
+    await pool.execute(sql, valores);
+    return this.obtenerPorId(id);
   }
 
   // Eliminar noticia
   async eliminar(id) {
-    const sql = 'DELETE FROM noticia WHERE id = $1 RETURNING *';
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const sql = 'DELETE FROM noticia WHERE id = ?';
+    await pool.execute(sql, [id]);
+    return { id };
   }
 }
 

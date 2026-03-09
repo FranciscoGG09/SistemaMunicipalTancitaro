@@ -1,58 +1,59 @@
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 
 class Correo {
   // Crear nuevo correo
   async crear(correoData) {
-    const { remitente_id, destinatarios, asunto, cuerpo, adjuntos } = correoData;
+    const { id, remitente_id, destinatarios, asunto, cuerpo, adjuntos } = correoData;
 
     const sql = `
-      INSERT INTO correo (remitente_id, destinatarios, asunto, cuerpo, adjuntos)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
+      INSERT INTO correo (id, remitente_id, destinatarios, asunto, cuerpo, adjuntos)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    const result = await query(sql, [
-      remitente_id, 
-      destinatarios, 
-      asunto, 
-      cuerpo, 
-      adjuntos || []
+    await pool.execute(sql, [
+      id,
+      remitente_id,
+      JSON.stringify(destinatarios || []),
+      asunto,
+      cuerpo,
+      JSON.stringify(adjuntos || [])
     ]);
 
-    return result.rows[0];
+    return this.obtenerPorId(id);
   }
 
   // Obtener correos por destinatario
   async obtenerPorDestinatario(usuarioId, pagina = 1, limite = 10) {
-    const offset = (pagina - 1) * limite;
-    
+    const offset = (pagina - 1) * parseInt(limite);
+
+    // En MySQL usamos JSON_CONTAINS para buscar en un array JSON
     const sql = `
       SELECT c.*, u.nombre as remitente_nombre, u.email as remitente_email
       FROM correo c
       LEFT JOIN usuario u ON c.remitente_id = u.id
-      WHERE $1 = ANY(c.destinatarios)
+      WHERE JSON_CONTAINS(c.destinatarios, CAST(? AS CHAR))
       ORDER BY c.enviado_en DESC
-      LIMIT $2 OFFSET $3
+      LIMIT ? OFFSET ?
     `;
 
-    const result = await query(sql, [usuarioId, limite, offset]);
-    return result.rows;
+    const { rows } = await query(sql, [usuarioId, parseInt(limite), offset]);
+    return rows;
   }
 
   // Obtener correos enviados por un usuario
   async obtenerPorRemitente(remitenteId, pagina = 1, limite = 10) {
-    const offset = (pagina - 1) * limite;
-    
+    const offset = (pagina - 1) * parseInt(limite);
+
     const sql = `
-      SELECT c.*, COUNT(*) OVER() as total_count
+      SELECT c.*
       FROM correo c
-      WHERE c.remitente_id = $1
+      WHERE c.remitente_id = ?
       ORDER BY c.enviado_en DESC
-      LIMIT $2 OFFSET $3
+      LIMIT ? OFFSET ?
     `;
 
-    const result = await query(sql, [remitenteId, limite, offset]);
-    return result.rows;
+    const { rows } = await query(sql, [remitenteId, parseInt(limite), offset]);
+    return rows;
   }
 
   // Obtener correo por ID
@@ -61,40 +62,41 @@ class Correo {
       SELECT c.*, u.nombre as remitente_nombre, u.email as remitente_email
       FROM correo c
       LEFT JOIN usuario u ON c.remitente_id = u.id
-      WHERE c.id = $1
+      WHERE c.id = ?
     `;
 
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const { rows } = await query(sql, [id]);
+    return rows[0];
   }
 
   // Marcar correo como leído
   async marcarComoLeido(id) {
-    const sql = 'UPDATE correo SET leido = true WHERE id = $1 RETURNING *';
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const sql = 'UPDATE correo SET leido = true WHERE id = ?';
+    await pool.execute(sql, [id]);
+    return this.obtenerPorId(id);
   }
 
   // Eliminar correo
   async eliminar(id) {
-    const sql = 'DELETE FROM correo WHERE id = $1 RETURNING *';
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const sql = 'DELETE FROM correo WHERE id = ?';
+    await pool.execute(sql, [id]);
+    return { id };
   }
 
   // Obtener estadísticas de correos
   async obtenerEstadisticas(usuarioId) {
+    // MySQL no soporta FILTER, usamos SUM(CASE ...)
     const sql = `
       SELECT 
         COUNT(*) as total,
-        COUNT(*) FILTER (WHERE leido = true) as leidos,
-        COUNT(*) FILTER (WHERE leido = false) as no_leidos
+        SUM(CASE WHEN leido = true THEN 1 ELSE 0 END) as leidos,
+        SUM(CASE WHEN leido = false THEN 1 ELSE 0 END) as no_leidos
       FROM correo 
-      WHERE $1 = ANY(destinatarios)
+      WHERE JSON_CONTAINS(destinatarios, CAST(? AS CHAR))
     `;
 
-    const result = await query(sql, [usuarioId]);
-    return result.rows[0];
+    const { rows } = await query(sql, [usuarioId]);
+    return rows[0];
   }
 }
 

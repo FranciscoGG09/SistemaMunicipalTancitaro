@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class Usuario {
@@ -18,12 +18,13 @@ class Usuario {
 
     const sql = `
       INSERT INTO usuario (nombre, email, password_hash, rol, departamento) 
-      VALUES ($1, $2, $3, $4, $5) 
-      RETURNING id, nombre, email, rol, departamento, creado_en
+      VALUES (?, ?, ?, ?, ?)
     `;
 
-    const result = await query(sql, [nombre, email, passwordHash, rol, departamento]);
-    return result.rows[0];
+    const [result] = await pool.execute(sql, [nombre, email, passwordHash, rol, departamento]);
+    const insertId = result.insertId;
+
+    return this.buscarPorId(insertId);
   }
 
   // Registrar ciudadano (Público)
@@ -40,16 +41,16 @@ class Usuario {
 
   // Buscar usuario por email
   async buscarPorEmail(email) {
-    const sql = 'SELECT * FROM usuario WHERE email = $1';
-    const result = await query(sql, [email]);
-    return result.rows[0];
+    const sql = 'SELECT * FROM usuario WHERE email = ?';
+    const { rows } = await query(sql, [email]);
+    return rows[0];
   }
 
   // Buscar usuario por ID
   async buscarPorId(id) {
-    const sql = 'SELECT id, nombre, email, rol, departamento, creado_en FROM usuario WHERE id = $1';
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const sql = 'SELECT id, nombre, email, rol, departamento, creado_en FROM usuario WHERE id = ?';
+    const { rows } = await query(sql, [id]);
+    return rows[0];
   }
 
   // Verificar contraseña
@@ -59,10 +60,9 @@ class Usuario {
 
   // Actualizar usuario
   async actualizar(id, datosActualizados) {
-    const camposPermitidos = ['nombre', 'password', 'rol', 'departamento']; // Permitimos todos en el modelo, pero el UI los restringe
+    const camposPermitidos = ['nombre', 'password', 'rol', 'departamento'];
     const campos = [];
     const valores = [];
-    let contador = 1;
 
     // Construir dinámicamente la consulta
     for (const key of Object.keys(datosActualizados)) {
@@ -70,16 +70,14 @@ class Usuario {
         let valor = datosActualizados[key];
         let campo = key;
 
-        // Si es password, solo actualizar si tiene valor y mapear a password_hash
         if (key === 'password') {
-          if (!valor) continue; // Saltar si está vacío
+          if (!valor) continue;
           valor = await bcrypt.hash(valor, 10);
           campo = 'password_hash';
         }
 
-        campos.push(`${campo} = $${contador}`);
+        campos.push(`${campo} = ?`);
         valores.push(valor);
-        contador++;
       }
     }
 
@@ -88,27 +86,27 @@ class Usuario {
     }
 
     valores.push(id);
-    const sql = `UPDATE usuario SET ${campos.join(', ')} WHERE id = $${contador} RETURNING *`;
+    const sql = `UPDATE usuario SET ${campos.join(', ')} WHERE id = ?`;
 
-    const result = await query(sql, valores);
-    return result.rows[0];
+    await pool.execute(sql, valores);
+    return this.buscarPorId(id);
   }
+
   // Obtener todos los usuarios
   async obtenerTodos() {
     const sql = 'SELECT id, nombre, email, rol, departamento, creado_en FROM usuario ORDER BY creado_en DESC';
-    const result = await query(sql);
-    return result.rows;
+    const { rows } = await query(sql);
+    return rows;
   }
 
   // Eliminar usuario
   async eliminar(id) {
-    // Primero eliminar reportes asociados para evitar violación de llave foránea
-    await query('DELETE FROM reporte WHERE usuario_id = $1', [id]);
+    // Primero eliminar reportes asociados (MySQL maneja ON DELETE CASCADE si se configuró, pero lo mantenemos por consistencia)
+    await query('DELETE FROM reporte WHERE usuario_id = ?', [id]);
 
-    // Luego eliminar el usuario
-    const sql = 'DELETE FROM usuario WHERE id = $1 RETURNING id';
-    const result = await query(sql, [id]);
-    return result.rows[0];
+    const sql = 'DELETE FROM usuario WHERE id = ?';
+    await pool.execute(sql, [id]);
+    return { id };
   }
 }
 
