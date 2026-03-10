@@ -44,7 +44,7 @@ class ReportService {
       String? fotoPath) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString('auth_token');
 
       var request =
           http.MultipartRequest('POST', Uri.parse('$baseUrl/reportes'));
@@ -125,7 +125,7 @@ class ReportService {
   Future<List<dynamic>> getMisReportes() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+      final token = prefs.getString('auth_token');
 
       final response = await http.get(
         Uri.parse('$baseUrl/reportes'),

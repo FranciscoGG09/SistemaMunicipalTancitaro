@@ -56,7 +56,8 @@ const crearReporte = async (req, res) => {
     console.error('❌ Error detallado creando reporte:', error);
     res.status(500).json({
       error: 'Error interno del servidor al crear reporte',
-      detalles: error.message
+      detalles: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
